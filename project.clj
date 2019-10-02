@@ -17,7 +17,11 @@
                  [org.danielsz/system "0.4.1"]
                  [org.clojure/tools.namespace "0.2.11"]
                  [compojure "1.6.1"]
-                 [re-frame "0.10.6"]]
+                 [re-frame "0.10.6"]
+
+                 ;; My deps
+                 [cljsjs/d3 "5.12.0-0"]
+                 [rid3 "0.2.1"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-environ "1.1.0"]]

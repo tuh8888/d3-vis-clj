@@ -1,4 +1,7 @@
 (ns d3-vis-clj.db)
 
 (def default-db
-  {:name "re-frame"})
+  {:width 300
+   :data  [{:x 5}
+           {:x 2}
+           {:x 3}]})
