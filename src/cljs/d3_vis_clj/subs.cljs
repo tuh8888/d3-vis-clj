@@ -11,6 +11,12 @@
             (fn [db _]
               (:width db)))
 
-(rf/reg-sub :db
-            (fn [db _]
-              db))
+(rf/reg-sub
+  :data
+  (fn [db]
+    (:test-data db)))
+
+(rf/reg-sub
+  :get-var
+  (fn [db [_ var]]
+    (get-in db [:test-data :dataset var])))

@@ -3,163 +3,124 @@
             [cljsjs.d3]
             [rid3.core :as rid3 :refer [rid3->]]
             [goog.object :as gobj]
-            [reagent.core :as reagent]))
+            [d3-vis-clj.util :as util]))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Util Fns
+(defn sim-did-update [ratom]
+  (let [sim          (-> (js/d3.forceSimulation)
+                         (.force "link" (.id (-> js/d3 .forceLink) (fn [d] (.-id d))))
+                         (.force "charge" (js/d3.forceManyBody))
+                         (.force "center" (js/d3.forceCenter (/ (:width @ratom) 2)
+                                                             (/ (:height @ratom) 2))))
+        node-dataset (clj->js (-> @ratom
+                                  (get :dataset)
+                                  (get :nodes)))
+        link-dataset (clj->js (-> @ratom
+                                  (get :dataset)
+                                  (get :links)))
+        node-elems   @(rf/subscribe [:get-var :node-elems])
+        link-elems   @(rf/subscribe [:get-var :link-elems])
 
-(defonce app-state (reagent/atom {:data [{:x 5}
-                                         {:x 2}
-                                         {:x 3}]}))
+        tick-handler (fn []
+                       (-> node-elems
+                           (.attr "cx" (fn [_ idx]
+                                         (.-x (get node-dataset idx))))
+                           (.attr "cy" (fn [_ idx]
+                                         (.-y (get node-dataset idx)))))
 
-(defn get-width [ratom]
-  (:width @ratom))
-
-(defn get-height [ratom]
-  (let [width (get-width ratom)]
-    (* 0.8 width)))
-
-(defn get-value [d]
-  (gobj/get d "value"))
-
-(defn get-data [ratom]
-  (:data @ratom))
-
-(def cursor-key :bar-simple)
-
-(def margin {:top    8
-             :left   32
-             :right  16
-             :bottom 40})
-
-(defn translate [left top]
-  (str "translate("
-       (or left 0)
-       ","
-       (or top 0)
-       ")"))
-
-(def color
-  (-> js/d3
-      (.scaleOrdinal #js ["#3366CC"
-                          "#DC3912"
-                          "#FF9900"])))
-
-(defn prepare-dataset [ratom]
-  (-> @ratom
-      (get :dataset)
-      clj->js))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Scales
-
-(defn ->x-scale [ratom]
-  (let [{:keys [dataset]} @ratom
-        labels (mapv :label dataset)]
-    (-> js/d3
-        .scaleBand
-        (.rangeRound #js [0 (get-width ratom)])
-        (.padding 0.1)
-        (.domain (clj->js labels)))))
-
-(defn ->y-scale [ratom]
-  (let [{:keys [dataset]} @ratom
-        values    (mapv :value dataset)
-        max-value (apply max values)]
-    (-> js/d3
-        .scaleLinear
-        (.rangeRound #js [(get-height ratom) 0])
-        (.domain #js [0 max-value]))))
+                       (-> link-elems
+                           (.attr "x1" (fn [_ idx]
+                                         (-> (get link-dataset idx)
+                                             .-source .-x)))
+                           (.attr "y1" (fn [_ idx]
+                                         (-> (get link-dataset idx)
+                                             .-source .-y)))
+                           (.attr "x2" (fn [_ idx]
+                                         (-> (get link-dataset idx)
+                                             .-target .-x)))
+                           (.attr "y2" (fn [_ idx]
+                                         (-> (get link-dataset idx)
+                                             .-target .-y)))))]
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Page
+    ;; Add notes to simulation
+    (-> sim
+        (.nodes node-dataset)
+        (.on "tick" tick-handler))
 
-(defn x-axis []
-  {:kind      :container
-   :class     "x-axis"
-   :did-mount (fn [node ratom]
-                (let [x-scale (->x-scale ratom)]
-                  (rid3-> node
-                          {:transform (translate 0 (get-height ratom))}
-                          (.call (.axisBottom js/d3 x-scale)))))})
+    ;; Add link force to simulation
+    (-> sim
+        (.force "link")
+        (.links link-dataset))))
 
-(defn y-axis []
-  {:kind  :container
-   :class "y-axis"
-   :did-mount
-          (fn [node ratom]
-            (let [y-scale (->y-scale ratom)]
-              (rid3-> node
-                      (.call (-> (.axisLeft js/d3 y-scale)
-                                 (.ticks 3))))))})
-
-(defn get-label
-  [d]
-  (gobj/get d "label"))
-
-(defn bar-chart []
-  {:kind            :elem-with-data
-   :class           "bars"
-   :tag             "rect"
-   :prepare-dataset prepare-dataset
-   :did-mount       (fn [node ratom]
-                      (let [y-scale (->y-scale ratom)
-                            x-scale (->x-scale ratom)]
-                        (rid3-> node
-                                {:x      (fn [d] (x-scale (get-label d)))
-                                 :width  (.bandwidth x-scale)
-                                 :fill   (fn [d i] (color i))
-                                 :height (fn [d]
-                                           (- (get-height ratom)
-                                              (y-scale (get-value d))))
-                                 :y      (fn [d] (y-scale (get-value d)))})))})
+(defn drag-started [d idx]
+  (let [sim @(rf/subscribe [:get-var :sim])
+        d   (-> sim .nodes (get idx))]
+    (when (= 0 (-> js/d3 .-event .-active))
+      (-> sim (.alphaTarget 0.3) (.restart)))
+    (set! (.-fx d) (.-x d))
+    (set! (.-fy d) (.-y d))))
 
 
+(defn dragged [_ idx]
+  (let [sim @(rf/subscribe [:get-var :sim])
+        d   (-> sim .nodes (get idx))]
+    (set! (.-fx d) (.-x js/d3.event))
+    (set! (.-fy d) (.-y js/d3.event))))
 
-(defn d3-vis-component []
+(defn drag-ended [_ idx]
+  (let [sim @(rf/subscribe [:get-var :sim])
+        d   (-> sim .nodes (get idx))]
+    (when (= 0 (-> js/d3 .-event .-active))
+      (-> sim (.alphaTarget 0)))
+    (set! (.-fx d) nil)
+    (set! (.-fy d) nil)))
+
+
+(defn force-viz [ratom]
   [rid3/viz
-   {:id             (name cursor-key)
-    :ratom          (rf/subscribe [:db])
-    :svg            {:did-mount
-                     (fn [node ratom]
-                       (rid3-> node
-                               {:width  (+ (get-width ratom)
-                                           (get margin :left)
-                                           (get margin :right))
-                                :height (+ (get-height ratom)
-                                           (get margin :top)
-                                           (get margin :bottom))}))}
+   {:id     "force"
+    :ratom  ratom
+    :svg    {:did-mount (fn [node ratom]
+                          (rid3-> node
+                                  {:width  (:width @ratom)
+                                   :height (:height @ratom)
+                                   :style  {:background-color "grey"}}))}
+    :pieces [{:kind            :elem-with-data
+              :tag             "circle"
+              :class           "node"
+              :did-mount       (fn [node ratom]
+                                 (let [r (rid3-> node
+                                                 {:r    5
+                                                  :fill "red"})]
+                                   (rf/dispatch-sync [:set-nodes r])))
+              :prepare-dataset (fn [ratom]
+                                (let [nodes (->> @ratom
+                                                 :dataset
+                                                 :nodes)]
+                                  (clj->js nodes)))}
 
-    :main-container {:did-mount (fn [node _]
-                                  (rid3-> node
-                                          {:transform (translate
-                                                        (get margin :left)
-                                                        (get margin :right))}))}
-    :pieces         [(x-axis)
-                     (y-axis)
-                     (bar-chart)]}])
+             {:kind            :elem-with-data
+              :tag             "line"
+              :class           "link"
+              :did-mount       (fn [node ratom]
+                                 (let [r (rid3-> node
+                                                 {:stroke-width 1
+                                                  :stroke       "#E5E5E5"})]
+                                   (rf/dispatch-sync [:set-links r])))
+              :prepare-dataset (fn [ratom]
+                                 (->> @ratom
+                                      :dataset
+                                      :links
+                                      clj->js))}
+             {:kind       :raw
+              :did-mount  sim-did-update
+              :did-update sim-did-update}]}])
 
-(defn toggle-width-btn
-  []
-  [:div
-   [:button
-    {:on-click #(rf/dispatch [:toggle-width])}
-    "Toggle width"]])
 
-(defn random-data-btn
-  []
-  [:div
-   [:button
-    {:on-click #(rf/dispatch [:generate-random-data])}
-    "Randomize data"]])
 
 (defn main-panel []
-  #_(let [name (rf/subscribe [:name])]
-      (fn []
-        [:div "Hello from " @name]))
-  [:div
-   [:h1 "Bar Chart"]
-   [toggle-width-btn]
-   [random-data-btn]
-   [d3-vis-component]])
+  (rf/dispatch-sync [:window-width js/window.innerWidth])
+  (rf/dispatch-sync [:window-height js/window.innerHeight])
+
+  (let [data (rf/subscribe [:data])]
+    [force-viz data]))
