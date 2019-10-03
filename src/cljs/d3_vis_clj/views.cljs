@@ -5,41 +5,75 @@
             [goog.object :as gobj]
             [d3-vis-clj.util :as util]))
 
+(def link-force
+  (-> js/d3
+      .forceLink
+      (.id util/get-id)
+      (.strength (fn [link]
+                   (gobj/get link "strength")))))
+
+(def charge-force
+  (-> (js/d3.forceManyBody)
+      (.strength -120)))
+
+(defn center-force [ratom]
+  (-> js/d3
+      (.forceCenter
+        (/ (:width @ratom) 2)
+        (/ (:height @ratom) 2))))
+
+(defn collide-force [ratom]
+  (-> js/d3
+      (.forceCollide)
+      (.radius (:r ratom))))
+
 (defn sim-did-update [ratom]
-  (let [sim          (-> (js/d3.forceSimulation)
-                         (.force "link" (.id (-> js/d3 .forceLink) (fn [d] (.-id d))))
-                         (.force "charge" (js/d3.forceManyBody))
-                         (.force "center" (js/d3.forceCenter (/ (:width @ratom) 2)
-                                                             (/ (:height @ratom) 2))))
+  (let [sim          (-> js/d3
+                         .forceSimulation
+                         (.force "link" link-force)
+                         (.force "collide" (collide-force ratom))
+                         (.force "charge" charge-force)
+                         (.force "center" (center-force ratom)))
         node-dataset (clj->js (-> @ratom
-                                  (get :dataset)
-                                  (get :nodes)))
+                                  :dataset
+                                  :nodes))
         link-dataset (clj->js (-> @ratom
-                                  (get :dataset)
-                                  (get :links)))
+                                  :dataset
+                                  :links))
         node-elems   @(rf/subscribe [:get-var :node-elems])
         link-elems   @(rf/subscribe [:get-var :link-elems])
 
         tick-handler (fn []
-                       (-> node-elems
-                           (.attr "cx" (fn [_ idx]
-                                         (.-x (get node-dataset idx))))
-                           (.attr "cy" (fn [_ idx]
-                                         (.-y (get node-dataset idx)))))
-
-                       (-> link-elems
-                           (.attr "x1" (fn [_ idx]
-                                         (-> (get link-dataset idx)
-                                             .-source .-x)))
-                           (.attr "y1" (fn [_ idx]
-                                         (-> (get link-dataset idx)
-                                             .-source .-y)))
-                           (.attr "x2" (fn [_ idx]
-                                         (-> (get link-dataset idx)
-                                             .-target .-x)))
-                           (.attr "y2" (fn [_ idx]
-                                         (-> (get link-dataset idx)
-                                             .-target .-y)))))]
+                       (rid3-> node-elems
+                               {:cx (fn [_ idx]
+                                      (-> node-dataset
+                                          (get idx)
+                                          (.-x)))
+                                :cy (fn [_ idx]
+                                      (-> node-dataset
+                                          (get idx)
+                                          (.-y)))})
+                       (rid3-> link-elems
+                               {:x1 (fn [_ idx]
+                                      (-> link-dataset
+                                          (get idx)
+                                          (.-source)
+                                          (.-x)))
+                                :y1 (fn [_ idx]
+                                      (-> link-dataset
+                                          (get idx)
+                                          (.-source)
+                                          (.-y)))
+                                :x2 (fn [_ idx]
+                                      (-> link-dataset
+                                          (get idx)
+                                          (.-target)
+                                          (.-x)))
+                                :y2 (fn [_ idx]
+                                      (-> link-dataset
+                                          (get idx)
+                                          (.-target)
+                                          (.-y)))}))]
 
 
     ;; Add notes to simulation
@@ -50,28 +84,48 @@
     ;; Add link force to simulation
     (-> sim
         (.force "link")
-        (.links link-dataset))))
+        (.links link-dataset))
+    (rf/dispatch-sync [:set-var :sim sim])))
 
 (defn drag-started [d idx]
+  (println "drag started" d)
   (let [sim @(rf/subscribe [:get-var :sim])
-        d   (-> sim .nodes (get idx))]
-    (when (= 0 (-> js/d3 .-event .-active))
-      (-> sim (.alphaTarget 0.3) (.restart)))
+        d   (-> sim
+                (.nodes)
+                (get idx))]
+    (println "drag started" d)
+    (when-not (-> js/d3
+                  (.-event)
+                  (.-active))
+      (println "restart")
+      (-> sim
+          (.alphaTarget 0.3)
+          (.restart)))
     (set! (.-fx d) (.-x d))
     (set! (.-fy d) (.-y d))))
 
 
-(defn dragged [_ idx]
+(defn dragged [d idx]
   (let [sim @(rf/subscribe [:get-var :sim])
-        d   (-> sim .nodes (get idx))]
-    (set! (.-fx d) (.-x js/d3.event))
+        d   (-> sim
+                (.nodes)
+                (get idx))]
+    (->> js/d3.event
+         (.-x)
+         (set! (.-fx d)))
     (set! (.-fy d) (.-y js/d3.event))))
 
-(defn drag-ended [_ idx]
+(defn drag-ended [d idx]
+  (println "drag ended")
   (let [sim @(rf/subscribe [:get-var :sim])
-        d   (-> sim .nodes (get idx))]
-    (when (= 0 (-> js/d3 .-event .-active))
-      (-> sim (.alphaTarget 0)))
+        d   (-> sim
+                (.nodes)
+                (get idx))]
+    (when-not (-> js/d3
+                  (.-event)
+                  (.-active))
+      (-> sim
+          (.alphaTarget 0)))
     (set! (.-fx d) nil)
     (set! (.-fy d) nil)))
 
@@ -85,19 +139,25 @@
                                   {:width  (:width @ratom)
                                    :height (:height @ratom)
                                    :style  {:background-color "grey"}}))}
+
     :pieces [{:kind            :elem-with-data
               :tag             "circle"
               :class           "node"
               :did-mount       (fn [node ratom]
-                                 (let [r (rid3-> node
-                                                 {:r    5
-                                                  :fill "red"})]
-                                   (rf/dispatch-sync [:set-nodes r])))
+                                 (let [r (-> node
+                                             (rid3-> {:r    (:r @ratom)
+                                                      :fill (:node-color @ratom)})
+                                             (.call (-> js/d3
+                                                        (.drag)
+                                                        (.on "start" drag-started)
+                                                        (.on "drag" dragged)
+                                                        (.on "end" drag-ended))))]
+                                   (rf/dispatch-sync [:set-var :node-elems r])))
               :prepare-dataset (fn [ratom]
-                                (let [nodes (->> @ratom
-                                                 :dataset
-                                                 :nodes)]
-                                  (clj->js nodes)))}
+                                 (->> @ratom
+                                      :dataset
+                                      :nodes
+                                      (clj->js)))}
 
              {:kind            :elem-with-data
               :tag             "line"
@@ -106,12 +166,12 @@
                                  (let [r (rid3-> node
                                                  {:stroke-width 1
                                                   :stroke       "#E5E5E5"})]
-                                   (rf/dispatch-sync [:set-links r])))
+                                   (rf/dispatch-sync [:set-var :link-elems r])))
               :prepare-dataset (fn [ratom]
                                  (->> @ratom
                                       :dataset
                                       :links
-                                      clj->js))}
+                                      (clj->js)))}
              {:kind       :raw
               :did-mount  sim-did-update
               :did-update sim-did-update}]}])

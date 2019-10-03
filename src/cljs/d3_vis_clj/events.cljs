@@ -53,12 +53,8 @@
     {:db (-> db
              (assoc-in [:test-data :height] height))}))
 
-(rf/reg-event-db :set-nodes
-  (fn [db [_ v]]
-    (assoc-in db [:test-data :dataset :node-elems] v)))
-
-(rf/reg-event-db :set-links
-  (fn [db [_ v]]
-    (assoc-in db [:test-data :dataset :link-elems] v)))
+(rf/reg-event-db :set-var
+  (fn [db [_ k v]]
+    (assoc-in db [:test-data :dataset k] v)))
 
 
