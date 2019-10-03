@@ -32,8 +32,10 @@
 
 (def default-db
   {:name      "d3-vis-clj"
-   :test-data {:r 5
-               :node-color "blue"
-               :dataset {:nodes nodes
-                         :links links}}})
+   :test-data {:node-config {:r    10
+                             :fill "blue"}
+               :link-config {:stroke-width 3
+                             :stroke       "#E5E5E5"}
+               :dataset     {:nodes nodes
+                             :links links}}})
 

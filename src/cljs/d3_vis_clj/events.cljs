@@ -57,4 +57,9 @@
   (fn [db [_ k v]]
     (assoc-in db [:test-data :dataset k] v)))
 
+(rf/reg-event-db
+  :set-node-var
+  (fn [db [_ i k v]]
+    (assoc-in db [:test-data :dataset :nodes i k] v)))
+
 
