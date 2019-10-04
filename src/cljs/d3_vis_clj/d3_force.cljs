@@ -70,41 +70,40 @@
   (.alphaTarget sim alpha-target))
 
 (defn link-force
-  [ratom]
-  (let [{:keys [distance strength]} (get-in ratom [:layout-config :link])]
+  []
+  (let [{:keys [distance strength]} @(rf/subscribe [:layout-config :link])]
     (cond-> (-> (js/d3.forceLink)
                 (.id util/get-id))
             strength (.strength (fn [link]
                                   (gobj/get link "strength")))
             distance (.distance distance))))
 
-(defn charge-force [ratom]
-  (let [{:keys [strength]} (get-in ratom [:layout-config :charge])]
+(defn charge-force []
+  (let [{:keys [strength]} (rf/subscribe [:layout-config :charge])]
     (cond-> (js/d3.forceManyBody)
             strength (.strength strength))))
 
-(defn center-force [ratom]
-  (let [{{:keys [center]} :layout-config
-         :keys            [width height]} ratom
+(defn center-force []
+  (let [center @(rf/subscribe [:layout-config :center])
         [width height] @(rf/subscribe [:window-dims])]
     (when center
       (js/d3.forceCenter (/ width 2)
                          (/ height 2)))))
 
-(defn collide-force [ratom]
-  (let [{{:keys [collide]} :layout-config
-         {:keys [r]}       :node-config} ratom]
-    (.log js/console @(rf/subscribe [:node-size]))
+(defn collide-force []
+  (let [collide @(rf/subscribe [:layout-config :collide])
+        r @(rf/subscribe [:node-size])]
+    (println r)
     (when collide
       (-> (js/d3.forceCollide)
           (.radius (fn [node] r))))))
 
 (defn set-forces!
-  [sim ratom]
+  [sim]
   (reduce (fn [sim [force force-fn]]
             (.force sim (name force) force-fn))
           sim
-          {:link (link-force ratom)
-           :collide (collide-force ratom)
-           :charge (charge-force ratom)
-           :center (center-force ratom)}))
+          {:link (link-force)
+           :collide (collide-force)
+           :charge (charge-force)
+           :center (center-force)}))

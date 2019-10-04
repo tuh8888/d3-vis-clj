@@ -30,3 +30,11 @@
 (rf/reg-sub :node-size
   (fn [db]
     (get-in db [:node-config :r])))
+
+(rf/reg-sub :link-config
+  (fn [db]
+    (get db :link-config)))
+
+(rf/reg-sub :layout-config
+  (fn [db [_ force]]
+    (get-in db [:layout-config force])))
