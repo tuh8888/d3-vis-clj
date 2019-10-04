@@ -12,31 +12,34 @@
     :x (.-x d)
     :y (.-y d)))
 
-(defn sim-links!
+(defn set-links!
   [sim new-links]
   (-> sim
       (.force "link")
       (.links new-links)))
 
-(defn sim-links
+(defn get-links
   [sim]
   (-> sim
       (.force "link")
       (.links)))
 
-(defn sim-nodes!
-  [sim new-nodes & {:keys [tick]}]
-  (cond-> (.nodes sim new-nodes)
-          tick (.on "tick" tick)))
+(defn set-nodes!
+  [sim new-nodes]
+  (.nodes sim new-nodes))
 
-(defn sim-nodes [sim]
+(defn set-tick!
+  [sim tick]
+  (.on sim "tick" tick))
+
+(defn get-nodes [sim]
   (.nodes sim))
 
-(defn sim-node
+(defn get-node
   ([sim i]
-   (-> sim (sim-nodes) (get i)))
+   (-> sim (get-nodes) (get i)))
   ([sim i c]
-   (-> sim (sim-node i) (coord c))))
+   (-> sim (get-node i) (coord c))))
 
 (defn link-endpoint
   [link end]
@@ -44,13 +47,13 @@
     :source (.-source link)
     :target (.-target link)))
 
-(defn sim-link
+(defn get-link
   ([sim i]
-   (-> sim (sim-links) (get i)))
+   (-> sim (get-links) (get i)))
   ([sim i end]
-   (-> sim (sim-link i) (link-endpoint end)))
+   (-> sim (get-link i) (link-endpoint end)))
   ([sim i end c]
-   (-> sim (sim-link i end) (coord c))))
+   (-> sim (get-link i end) (coord c))))
 
 (defn event-active? []
   (-> js/d3
@@ -91,7 +94,7 @@
 
 (defn collide-force []
   (let [collide @(rf/subscribe [:layout-config :collide])
-        r @(rf/subscribe [:node-size])]
+        r       @(rf/subscribe [:node-size])]
     (when collide
       (-> (js/d3.forceCollide)
           (.radius r)))))
@@ -101,8 +104,8 @@
   (reduce (fn [sim [force force-fn]]
             (.force sim (name force) force-fn))
           sim
-          {:link (link-force)
+          {:link    (link-force)
            :collide (collide-force)
-           :charge (charge-force)
-           :center (center-force)})
-  (sim-links! sim links))
+           :charge  (charge-force)
+           :center  (center-force)})
+  (set-links! sim links))

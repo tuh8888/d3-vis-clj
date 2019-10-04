@@ -21,7 +21,7 @@
 
 (rf/reg-sub :sim-node
   (fn [db [_ i]]
-    (force/sim-node (:sim db) i)))
+    (force/get-node (:sim db) i)))
 
 (rf/reg-sub :sim
   (fn [db]

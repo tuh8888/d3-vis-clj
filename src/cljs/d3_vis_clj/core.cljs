@@ -1,6 +1,6 @@
 (ns d3-vis-clj.core
   (:require [reagent.core :as reagent]
-            [re-frame.core :as re-frame]
+            [re-frame.core :as rf]
             [d3-vis-clj.events]
             [d3-vis-clj.subs]
             [d3-vis-clj.views :as views]
@@ -14,11 +14,13 @@
     (println "dev mode")))
 
 (defn mount-root []
-  (re-frame/clear-subscription-cache!)
+  (rf/clear-subscription-cache!)
   (reagent/render [views/main-panel]
                   (.getElementById js/document "app")))
 
 (defn render []
-  (re-frame/dispatch-sync [:initialize-db])
+  (rf/dispatch-sync [:initialize-db])
+  (rf/dispatch-sync [:initialize-sim])
+  (rf/dispatch-sync [:window-resize])
   (dev-setup)
   (mount-root))

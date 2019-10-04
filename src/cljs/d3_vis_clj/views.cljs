@@ -3,44 +3,27 @@
             [cljsjs.d3]
             [rid3.core :as rid3 :refer [rid3->]]
             [d3-vis-clj.drag :as drag]
-            [reagent.core :as reagent]
             [goog.object :as gobj]
             [d3-vis-clj.d3-force :as force]))
-
-(defonce app-state (reagent/atom {}))
-
-(defn prepare-data [ratom v]
-  (-> @ratom
-      :data
-      (get v)
-      (clj->js)))
 
 (defn tick-handler [sim node-elems link-elems]
   (fn []
     (rid3-> node-elems
             {:transform (fn [_ i]
-                          (force/translate (force/sim-node sim i :x)
-                                           (force/sim-node sim i :y)))})
+                          (force/translate (force/get-node sim i :x)
+                                           (force/get-node sim i :y)))})
     (rid3-> link-elems
-            {:x1 (fn [_ i] (force/sim-link sim i :source :x))
-             :y1 (fn [_ i] (force/sim-link sim i :source :y))
-             :x2 (fn [_ i] (force/sim-link sim i :target :x))
-             :y2 (fn [_ i] (force/sim-link sim i :target :y))})))
+            {:x1 (fn [_ i] (force/get-link sim i :source :x))
+             :y1 (fn [_ i] (force/get-link sim i :source :y))
+             :x2 (fn [_ i] (force/get-link sim i :target :x))
+             :y2 (fn [_ i] (force/get-link sim i :target :y))})))
 
-(defn sim-did-mount [sim _]
-  (let [nodes      (clj->js @(rf/subscribe [:get-data :nodes]))
-        links      (clj->js @(rf/subscribe [:get-data :links]))
+(defn sim-did-mount [_]
+  (let [sim        @(rf/subscribe [:sim])
+        links      (force/get-links sim)
         node-elems @(rf/subscribe [:get-data :node-elems])
         link-elems @(rf/subscribe [:get-data :link-elems])]
-    (force/sim-nodes! sim nodes :tick (tick-handler sim node-elems link-elems))
-    (force/set-forces! sim links)))
-
-(defn sim-did-update [sim _]
-  (let [nodes      (.nodes sim)
-        links      (clj->js @(rf/subscribe [:get-data :links]))
-        node-elems @(rf/subscribe [:get-data :node-elems])
-        link-elems @(rf/subscribe [:get-data :link-elems])]
-    (force/sim-nodes! sim nodes :tick (tick-handler sim node-elems link-elems))
+    (force/set-tick! sim (tick-handler sim node-elems link-elems))
     (force/set-forces! sim links)))
 
 (defn get-node-color [node]
@@ -49,8 +32,6 @@
       1 "red"
       2 "blue"
       3 "green")))
-
-(def sim (js/d3.forceSimulation))
 
 (defn force-viz [ratom]
   [rid3/viz
@@ -72,22 +53,26 @@
                                                  {:stroke-width stroke-width
                                                   :stroke       stroke})]
                                    (rf/dispatch-sync [:set-data :link-elems r])))
-              :prepare-dataset #(prepare-data % :links)}
+              :prepare-dataset #(-> @%
+                                    :sim
+                                    (force/get-links))}
 
              {:kind            :elem-with-data
               :tag             "circle"
               :class           "node"
-              :did-mount       (fn [node _]
+              :did-mount       (fn [node ratom]
                                  (let [node-elems (-> node
                                                       (rid3-> {:r    @(rf/subscribe [:node-size])
                                                                :fill get-node-color})
-                                                      (drag/call-drag sim))]
+                                                      (drag/call-drag (:sim @ratom)))]
                                    (rf/dispatch-sync [:set-data :node-elems node-elems])))
-              :prepare-dataset #(prepare-data % :nodes)}
+              :prepare-dataset #(-> @%
+                                    :sim
+                                    (force/get-nodes))}
 
              {:kind       :raw
-              :did-mount  #(sim-did-mount sim %)
-              :did-update #(sim-did-update sim %)}]}])
+              :did-mount  sim-did-mount
+              :did-update sim-did-mount}]}])
 
 (defn node-size-text-box []
   [:div
@@ -99,12 +84,11 @@
 (defn add-node-btn
   []
   [:div
-   [:button {:type      "button"
-             :on-click #(rf/dispatch [:add-node sim])}
+   [:button {:type     "button"
+             :on-click #(rf/dispatch [:add-node])}
     "Add Node"]])
 
 (defn main-panel []
-  (rf/dispatch-sync [:window-resize])
   [:div
    [node-size-text-box]
    [add-node-btn]
