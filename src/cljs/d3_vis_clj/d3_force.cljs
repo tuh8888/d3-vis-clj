@@ -93,17 +93,17 @@
 (defn collide-force []
   (let [collide @(rf/subscribe [:layout-config :collide])
         r @(rf/subscribe [:node-size])]
-    (println r)
     (when collide
       (-> (js/d3.forceCollide)
           (.radius (fn [node] r))))))
 
 (defn set-forces!
-  [sim]
+  [sim links]
   (reduce (fn [sim [force force-fn]]
             (.force sim (name force) force-fn))
           sim
           {:link (link-force)
            :collide (collide-force)
            :charge (charge-force)
-           :center (center-force)}))
+           :center (center-force)})
+  (sim-links! sim links))

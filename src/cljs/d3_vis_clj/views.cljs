@@ -28,18 +28,16 @@
              :y2 (fn [_ i] (force/sim-link sim i :target :y))})))
 
 (defn sim-did-mount [sim ratom]
-  (println "here")
   (let [nodes      (prepare-data ratom :nodes)
         links      (prepare-data ratom :links)
         node-elems @(rf/subscribe [:get-data :node-elems])
         link-elems @(rf/subscribe [:get-data :link-elems])]
-    (force/set-forces! sim)
     (force/sim-nodes! sim nodes :tick (tick-handler sim node-elems link-elems))
-    (force/sim-links! sim links)))
+    (force/set-forces! sim links)))
 
 (defn sim-did-update [sim ratom]
-  (.force sim "collide" (force/collide-force))
-  #_(force/set-forces! sim @ratom))
+  (let [links      (prepare-data ratom :links)]
+    (force/set-forces! sim links)))
 
 (defn get-node-color [node]
   (let [level (gobj/get node "level")]
