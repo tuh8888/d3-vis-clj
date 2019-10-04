@@ -32,10 +32,15 @@
 
 (def default-db
   {:name      "d3-vis-clj"
-   :test-data {:node-config {:r    10
-                             :fill "blue"}
-               :link-config {:stroke-width 3
-                             :stroke       "#E5E5E5"}
-               :dataset     {:nodes nodes
-                             :links links}}})
+   :test-data {:layout-config {:collide true
+                               :center true
+                               :charge {:strength -120}
+                               :link   {:distance 10
+                                        :strength :true}}
+               :node-config   {:r    10
+                               :fill "blue"}
+               :link-config   {:stroke-width 1
+                               :stroke       "#E5E5E5"}
+               :dataset       {:nodes nodes
+                               :links links}}})
 

@@ -3,30 +3,7 @@
             [cljsjs.d3]
             [rid3.core :as rid3 :refer [rid3->]]
             [goog.object :as gobj]
-            [d3-vis-clj.util :as util]))
-
-(def link-force
-  (-> js/d3
-      (.forceLink)
-      (.id util/get-id)
-      (.strength  (fn [link]
-                    (gobj/get link "strength")))
-      (.distance 1)))
-
-(def charge-force
-  (-> js/d3
-      (.forceManyBody)
-      (.strength -120)))
-
-(defn center-force [ratom]
-  (-> js/d3
-      (.forceCenter (/ (:width @ratom) 2)
-                    (/ (:height @ratom) 2))))
-
-(defn collide-force [ratom]
-  (-> js/d3
-      (.forceCollide)
-      (.radius (:r ratom))))
+            [d3-vis-clj.d3-force :as force]))
 
 (defn prepare-data [ratom v]
   (-> @ratom
@@ -34,96 +11,57 @@
       (get v)
       (clj->js)))
 
-(defn translate [x y]
-  (str "translate(" x "," y ")"))
-
 (defn tick-handler [sim node-elems link-elems]
   (fn []
     (rid3-> node-elems
-            {:transform (fn [d idx]
-                          (translate (-> sim
-                                         .nodes
-                                         (get idx)
-                                         (.-x))
-                                     (-> sim
-                                         .nodes
-                                         (get idx)
-                                         (.-y))))})
-
+            {:transform (fn [_ i]
+                          (force/translate (force/sim-node sim i :x)
+                                           (force/sim-node sim i :y)))})
     (rid3-> link-elems
-            {:x1 (fn [_ idx]
-                   (-> sim
-                       (.force "link")
-                       (.links)
-                       (get idx)
-                       (.-source)
-                       (.-x)))
-             :y1 (fn [_ idx]
-                   (-> sim
-                       (.force "link")
-                       (.links)
-                       (get idx)
-                       (.-source)
-                       (.-y)))
-             :x2 (fn [_ idx]
-                   (-> sim
-                       (.force "link")
-                       (.links)
-                       (get idx)
-                       (.-target)
-                       (.-x)))
-             :y2 (fn [_ idx]
-                   (-> sim
-                       (.force "link")
-                       (.links)
-                       (get idx)
-                       (.-target)
-                       (.-y)))})))
+            {:x1 (fn [_ i] (force/sim-link sim i :source :x))
+             :y1 (fn [_ i] (force/sim-link sim i :source :y))
+             :x2 (fn [_ i] (force/sim-link sim i :target :x))
+             :y2 (fn [_ i] (force/sim-link sim i :target :y))})))
 
 (defn sim-did-mount [ratom]
-  (let [sim          (-> js/d3
-                         (.forceSimulation)
-                         (.force "link" link-force)
-                         (.force "collide" (collide-force ratom))
-                         (.force "charge" charge-force)
-                         (.force "center" (center-force ratom)))
-        node-dataset (prepare-data ratom :nodes)
-        link-dataset (prepare-data ratom :links)
-        node-elems   @(rf/subscribe [:get-var :node-elems])
-        link-elems   @(rf/subscribe [:get-var :link-elems])]
-    (-> sim
-        (.nodes node-dataset)
-        (.on "tick" (tick-handler sim node-elems link-elems)))
-    (-> sim
-        (.force "link")
-        (.links link-dataset))
+  (let [sim        (force/force-sim ratom)
+        nodes      (prepare-data ratom :nodes)
+        links      (prepare-data ratom :links)
+        node-elems @(rf/subscribe [:get-var :node-elems])
+        link-elems @(rf/subscribe [:get-var :link-elems])]
+    (force/sim-nodes! sim nodes :tick (tick-handler sim node-elems link-elems))
+    (force/sim-links! sim links)
     (rf/dispatch [:set-var :sim sim])))
 
 (defn sim-did-update [ratom])
 
-(defn drag-started [d idx]
+
+(defn drag-started [d i]
   (println "start")
   (let [sim @(rf/subscribe [:get-var :sim])
-        d (-> sim .nodes (get idx))]
-    (when (= 0 (-> js/d3 .-event .-active))
-      (-> sim (.alphaTarget 0.3) (.restart)))
-    (set! (.-fx d) (.-x d))
-    (set! (.-fy d) (.-y d))))
+        d   (force/sim-node sim i)]
+    (when-not (force/event-active?)
+      (-> sim
+          (force/set-alpha-target! 0.3)
+          (.restart)))
+    (force/constrain-x! d (force/coord d :x))
+    (force/constrain-y! d (force/coord d :y))))
 
-(defn dragged [_ idx]
+(defn dragged [_ i]
   (let [sim @(rf/subscribe [:get-var :sim])
-        d (-> sim .nodes (get idx))]
-    (set! (.-fx d) (.-x js/d3.event))
-    (set! (.-fy d) (.-y js/d3.event))))
+        d   (force/sim-node sim i)]
+    (force/constrain-x! d (force/coord js/d3.event :x))
+    (force/constrain-y! d (force/coord js/d3.event :y))))
 
-(defn drag-ended [_ idx]
+(defn drag-ended [_ i]
   (println "end")
   (let [sim @(rf/subscribe [:get-var :sim])
-        d (-> sim .nodes (get idx))]
-    (when (= 0 (-> js/d3 .-event .-active))
-      (-> sim (.alphaTarget 0)))
-    (set! (.-fx d) nil)
-    (set! (.-fy d) nil)))
+        d   (force/sim-node sim i)]
+    (when-not (force/event-active?)
+      (force/set-alpha-target! sim 0))
+    (force/constrain-x! d nil)
+    (force/constrain-y! d nil)))
+
 
 (defn force-viz [ratom]
   [rid3/viz
@@ -139,15 +77,13 @@
               :tag             "circle"
               :class           "node"
               :did-mount       (fn [node ratom]
-                                 (let [config (:node-config @ratom)
+                                 (let [{{:keys [r fill]} :node-config} @ratom
                                        r (-> node
-                                             (rid3-> {:r    (:r config)
-                                                      :fill (:fill config)})
-                                             (.call (-> js/d3
-                                                        (.drag)
-                                                        (.on "start" drag-started)
-                                                        (.on "drag" dragged)
-                                                        (.on "end" drag-ended))))]
+                                             (rid3-> {:r    r
+                                                      :fill fill})
+                                             (force/drag :start drag-started
+                                                         :drag dragged
+                                                         :end drag-ended))]
                                    (rf/dispatch-sync [:set-var :node-elems r])))
               :prepare-dataset #(prepare-data % :nodes)}
 
@@ -155,9 +91,10 @@
               :tag             "line"
               :class           "link"
               :did-mount       (fn [node ratom]
-                                 (let [r (rid3-> node
-                                                 {:stroke-width 1
-                                                  :stroke       "#E5E5E5"})]
+                                 (let [{{:keys [stroke-width stroke]} :link-config} @ratom
+                                       r (rid3-> node
+                                                 {:stroke-width stroke-width
+                                                  :stroke       stroke})]
                                    (rf/dispatch-sync [:set-var :link-elems r])))
               :prepare-dataset #(prepare-data % :links)}
              {:kind       :raw
