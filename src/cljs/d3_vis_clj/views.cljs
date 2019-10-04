@@ -7,7 +7,7 @@
 
 (defn prepare-data [ratom v]
   (-> @ratom
-      :dataset
+      :data
       (get v)
       (clj->js)))
 
@@ -27,11 +27,11 @@
   (let [sim        (force/force-sim ratom)
         nodes      (prepare-data ratom :nodes)
         links      (prepare-data ratom :links)
-        node-elems @(rf/subscribe [:get-var :node-elems])
-        link-elems @(rf/subscribe [:get-var :link-elems])]
+        node-elems @(rf/subscribe [:get-data :node-elems])
+        link-elems @(rf/subscribe [:get-data :link-elems])]
     (force/sim-nodes! sim nodes :tick (tick-handler sim node-elems link-elems))
     (force/sim-links! sim links)
-    (rf/dispatch [:set-var :sim sim])))
+    (rf/dispatch [:set-sim sim])))
 
 (defn sim-did-update [ratom])
 
@@ -54,7 +54,7 @@
                                              (rid3-> {:r    r
                                                       :fill fill})
                                              (drag/call-drag))]
-                                   (rf/dispatch-sync [:set-var :node-elems r])))
+                                   (rf/dispatch-sync [:set-data :node-elems r])))
               :prepare-dataset #(prepare-data % :nodes)}
 
              {:kind            :elem-with-data
@@ -65,13 +65,13 @@
                                        r (rid3-> node
                                                  {:stroke-width stroke-width
                                                   :stroke       stroke})]
-                                   (rf/dispatch-sync [:set-var :link-elems r])))
+                                   (rf/dispatch-sync [:set-data :link-elems r])))
               :prepare-dataset #(prepare-data % :links)}
              {:kind       :raw
               :did-mount  sim-did-mount
               :did-update sim-did-update}]}])
 
-(defn node-size-btn
+(defn node-size-text-box
   []
   [:div
    "Node size: "
@@ -82,6 +82,6 @@
 (defn main-panel []
   (rf/dispatch-sync [:window-resize])
   [:div
-   [node-size-btn]
-   (let [data (rf/subscribe [:data])]
+   [node-size-text-box]
+   (let [data (rf/subscribe [:db])]
      [force-viz data])])
