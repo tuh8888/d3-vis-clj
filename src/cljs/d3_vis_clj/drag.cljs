@@ -4,8 +4,8 @@
 
 (defn started [_ i]
   (println "start")
-  (let [sim @(rf/subscribe [:sim-set])
-        d   (force/sim-node sim i)]
+  (let [sim @(rf/subscribe [:sim])
+        d @(rf/subscribe [:sim-node i])]
     (when-not (force/event-active?)
       (-> sim
           (force/set-alpha-target! 0.3)
@@ -14,15 +14,14 @@
     (force/constrain-y! d (force/coord d :y))))
 
 (defn dragged [_ i]
-  (let [sim @(rf/subscribe [:sim-set])
-        d   (force/sim-node sim i)]
+  (let [d @(rf/subscribe [:sim-node i])]
     (force/constrain-x! d (force/coord js/d3.event :x))
     (force/constrain-y! d (force/coord js/d3.event :y))))
 
 (defn ended [_ i]
   (println "end")
-  (let [sim @(rf/subscribe [:sim-set])
-        d   (force/sim-node sim i)]
+  (let [sim @(rf/subscribe [:sim])
+        d @(rf/subscribe [:sim-node i])]
     (when-not (force/event-active?)
       (force/set-alpha-target! sim 0))
     (force/constrain-x! d nil)

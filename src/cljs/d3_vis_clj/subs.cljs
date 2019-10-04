@@ -1,6 +1,7 @@
 (ns d3-vis-clj.subs
   (:require-macros [reagent.ratom :refer [reaction]])
-  (:require [re-frame.core :as rf]))
+  (:require [re-frame.core :as rf]
+            [d3-vis-clj.d3-force :as force]))
 
 (rf/reg-sub :name
   (fn [db]
@@ -18,7 +19,11 @@
   (fn [db [_ var]]
     (get-in db [:data var])))
 
-(rf/reg-sub :sim-set
+(rf/reg-sub :sim-node
+  (fn [db [_ i]]
+    (force/sim-node (:sim db) i)))
+
+(rf/reg-sub :sim
   (fn [db]
     (:sim db)))
 
