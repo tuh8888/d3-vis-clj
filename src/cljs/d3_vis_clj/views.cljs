@@ -3,6 +3,7 @@
             [cljsjs.d3]
             [rid3.core :as rid3 :refer [rid3->]]
             [d3-vis-clj.drag :as drag]
+            [goog.object :as gobj]
             [d3-vis-clj.d3-force :as force]))
 
 (defn prepare-data [ratom v]
@@ -35,6 +36,12 @@
 
 (defn sim-did-update [ratom])
 
+(defn get-node-color [node]
+  (let [level (gobj/get node "level")]
+    (if (= 1 level)
+      "red"
+      "blue")))
+
 (defn force-viz [ratom]
   [rid3/viz
    {:id     "force"
@@ -60,12 +67,11 @@
               :tag             "circle"
               :class           "node"
               :did-mount       (fn [node ratom]
-                                 (let [{{:keys [r fill]} :node-config} @ratom
-                                       r (-> node
-                                             (rid3-> {:r    r
-                                                      :fill fill})
-                                             (drag/call-drag))]
-                                   (rf/dispatch-sync [:set-data :node-elems r])))
+                                 (let [node-elems (-> node
+                                                      (rid3-> {:r    @(rf/subscribe [:node-size])
+                                                               :fill get-node-color})
+                                                      (drag/call-drag))]
+                                   (rf/dispatch-sync [:set-data :node-elems node-elems])))
               :prepare-dataset #(prepare-data % :nodes)}
              {:kind       :raw
               :did-mount  sim-did-mount
