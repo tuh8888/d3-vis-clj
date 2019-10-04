@@ -4,8 +4,8 @@
             [d3-vis-clj.d3-force :as force]))
 
 (rf/reg-event-db :initialize-db
- (fn  [_ _]
-   db/default-db))
+  (fn [_ _]
+    db/default-db))
 
 (rf/reg-event-db :window-resize
   (fn [db _]
@@ -24,26 +24,28 @@
 (rf/reg-event-db :initialize-sim
   (fn [db]
     (let [sim (js/d3.forceSimulation)]
-      (-> sim
-          (d3-vis-clj.d3-force/set-nodes! (clj->js db/nodes))
-          (d3-vis-clj.d3-force/set-forces! (clj->js db/links)))
+      (force/set-forces! sim)
+      (force/restart sim (get-in db [:data :nodes])
+                         (get-in db [:data :links]))
+      #_(-> sim
+            (force/set-nodes! (clj->js (get-in db [:data :nodes])))
+            (force/set-links! (clj->js (get-in db [:data :links]))))
+      #_(force/set-tick! sim)
       (assoc db :sim sim))))
 
 (rf/reg-event-db :add-node
   (fn [db]
-    (let [sim (:sim db)
+    (let [sim      (:sim db)
           new-node (hash-map :id "new" :group 0 :label "New node" :level 3)
           new-link (hash-map :target "mammal" :source "new" :strength 0.1)
-          nodes (-> sim
-                    (force/get-nodes)
-                    (js->clj)
-                    (conj new-node)
-                    (clj->js))
-          links (-> sim
-                    (force/get-links)
-                    (js->clj)
-                    (conj new-link)
-                    (clj->js))]
-      (force/set-nodes! sim nodes)
-      (force/set-links! sim links)
-      (assoc db :added true))))
+          db       (-> db
+                       (update-in [:data :nodes] conj new-node)
+                       (update-in [:data :links] conj new-link))]
+      (force/restart sim (get-in db [:data :nodes])
+                         (get-in db [:data :links]))
+
+      #_(-> sim
+            (force/set-nodes! (clj->js (get-in db [:data :nodes])))
+            (force/set-links! (clj->js (get-in db [:data :links]))))
+      #_(force/set-tick! sim)
+      db)))

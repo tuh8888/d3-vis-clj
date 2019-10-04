@@ -2,6 +2,7 @@
   (:require [d3-vis-clj.util :as util]
             [cljsjs.d3]
             [re-frame.core :as rf]
+            [rid3.core :as rid3 :refer [rid3->]]
             [goog.object :as gobj]))
 
 (defn translate [x y]
@@ -27,10 +28,6 @@
 (defn set-nodes!
   [sim new-nodes]
   (.nodes sim new-nodes))
-
-(defn set-tick!
-  [sim tick]
-  (.on sim "tick" tick))
 
 (defn get-nodes [sim]
   (.nodes sim))
@@ -100,12 +97,73 @@
           (.radius r)))))
 
 (defn set-forces!
-  [sim links]
-  (reduce (fn [sim [force force-fn]]
-            (.force sim (name force) force-fn))
-          sim
-          {:link    (link-force)
-           :collide (collide-force)
-           :charge  (charge-force)
-           :center  (center-force)})
-  (set-links! sim links))
+  [sim & {:keys [reset?]}]
+  (let [links   (when reset? (get-links sim))
+        force-m {:link    (link-force)
+                 :collide (collide-force)
+                 :charge  (charge-force)
+                 :center  (center-force)}]
+    (reduce (fn [sim [force force-fn]]
+              (.force sim (name force) force-fn))
+            sim force-m)
+    (when reset? (set-links! sim links))))
+
+(defn set-tick! [sim]
+  (-> sim
+      (.on "tick"
+           (fn []
+             (set-forces! sim :reset? true)
+             (let [node-elems @(rf/subscribe [:get-data :node-elems])
+                   link-elems @(rf/subscribe [:get-data :link-elems])]
+               (rid3-> node-elems
+                       {:transform (fn [_ i]
+                                     (translate (get-node sim i :x)
+                                                (get-node sim i :y)))})
+               (rid3-> link-elems
+                       {:x1 (fn [_ i] (get-link sim i :source :x))
+                        :y1 (fn [_ i] (get-link sim i :source :y))
+                        :x2 (fn [_ i] (get-link sim i :target :x))
+                        :y2 (fn [_ i] (get-link sim i :target :y))}))))
+      (set-alpha-target! 0.3)
+      (.restart)))
+
+(defn call-drag
+  [node sim]
+  (letfn [(started [_ i]
+            (println "start")
+            (let [d (get-node sim i)]
+              (when-not (event-active?)
+                (-> sim
+                    (set-alpha-target! 0.3)
+                    (.restart)))
+              (constrain-x! d (coord d :x))
+              (constrain-y! d (coord d :y))))
+
+          (dragged [_ i]
+            (let [d (get-node sim i)]
+              (constrain-x! d (coord js/d3.event :x))
+              (constrain-y! d (coord js/d3.event :y))))
+
+          (ended [_ i]
+            (println "end")
+            (let [d (get-node sim i)]
+              (when-not (event-active?)
+                (set-alpha-target! sim 0))
+              (constrain-x! d nil)
+              (constrain-y! d nil)))]
+    (.call node (reduce (fn [x [on on-fn]]
+                          (.on x (name on) on-fn))
+                        (js/d3.drag)
+                        {:start started
+                         :drag  dragged
+                         :end   ended}))))
+
+(defn restart
+  "Restarts the simulation"
+  [sim nodes links]
+  (-> sim
+      (set-nodes! (clj->js nodes))
+      (set-links! (clj->js links)))
+  (set-tick! sim))
+
+

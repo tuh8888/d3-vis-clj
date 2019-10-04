@@ -19,10 +19,6 @@
   (fn [db [_ var]]
     (get-in db [:data var])))
 
-(rf/reg-sub :sim-node
-  (fn [db [_ i]]
-    (force/get-node (:sim db) i)))
-
 (rf/reg-sub :sim
   (fn [db]
     (:sim db)))
