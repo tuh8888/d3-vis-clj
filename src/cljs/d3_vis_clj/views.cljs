@@ -46,6 +46,17 @@
                                    :style  {:background-color "grey"}}))}
 
     :pieces [{:kind            :elem-with-data
+              :tag             "line"
+              :class           "link"
+              :did-mount       (fn [node ratom]
+                                 (let [{{:keys [stroke-width stroke]} :link-config} @ratom
+                                       r (rid3-> node
+                                                 {:stroke-width stroke-width
+                                                  :stroke       stroke})]
+                                   (rf/dispatch-sync [:set-data :link-elems r])))
+              :prepare-dataset #(prepare-data % :links)}
+
+             {:kind            :elem-with-data
               :tag             "circle"
               :class           "node"
               :did-mount       (fn [node ratom]
@@ -56,17 +67,6 @@
                                              (drag/call-drag))]
                                    (rf/dispatch-sync [:set-data :node-elems r])))
               :prepare-dataset #(prepare-data % :nodes)}
-
-             {:kind            :elem-with-data
-              :tag             "line"
-              :class           "link"
-              :did-mount       (fn [node ratom]
-                                 (let [{{:keys [stroke-width stroke]} :link-config} @ratom
-                                       r (rid3-> node
-                                                 {:stroke-width stroke-width
-                                                  :stroke       stroke})]
-                                   (rf/dispatch-sync [:set-data :link-elems r])))
-              :prepare-dataset #(prepare-data % :links)}
              {:kind       :raw
               :did-mount  sim-did-mount
               :did-update sim-did-update}]}])
