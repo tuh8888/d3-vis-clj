@@ -2,7 +2,7 @@
   (:require [re-frame.core :as rf]
             [cljsjs.d3]
             [rid3.core :as rid3 :refer [rid3->]]
-            [goog.object :as gobj]
+            [d3-vis-clj.drag :as drag]
             [d3-vis-clj.d3-force :as force]))
 
 (defn prepare-data [ratom v]
@@ -35,34 +35,6 @@
 
 (defn sim-did-update [ratom])
 
-
-(defn drag-started [d i]
-  (println "start")
-  (let [sim @(rf/subscribe [:get-var :sim])
-        d   (force/sim-node sim i)]
-    (when-not (force/event-active?)
-      (-> sim
-          (force/set-alpha-target! 0.3)
-          (.restart)))
-    (force/constrain-x! d (force/coord d :x))
-    (force/constrain-y! d (force/coord d :y))))
-
-(defn dragged [_ i]
-  (let [sim @(rf/subscribe [:get-var :sim])
-        d   (force/sim-node sim i)]
-    (force/constrain-x! d (force/coord js/d3.event :x))
-    (force/constrain-y! d (force/coord js/d3.event :y))))
-
-(defn drag-ended [_ i]
-  (println "end")
-  (let [sim @(rf/subscribe [:get-var :sim])
-        d   (force/sim-node sim i)]
-    (when-not (force/event-active?)
-      (force/set-alpha-target! sim 0))
-    (force/constrain-x! d nil)
-    (force/constrain-y! d nil)))
-
-
 (defn force-viz [ratom]
   [rid3/viz
    {:id     "force"
@@ -81,9 +53,7 @@
                                        r (-> node
                                              (rid3-> {:r    r
                                                       :fill fill})
-                                             (force/drag :start drag-started
-                                                         :drag dragged
-                                                         :end drag-ended))]
+                                             (drag/call-drag))]
                                    (rf/dispatch-sync [:set-var :node-elems r])))
               :prepare-dataset #(prepare-data % :nodes)}
 
@@ -101,11 +71,17 @@
               :did-mount  sim-did-mount
               :did-update sim-did-update}]}])
 
-
+(defn node-size-btn
+  []
+  [:div
+   "Node size: "
+   [:input {:type "text"
+            :value @(rf/subscribe [:node-size])
+            :on-change #(rf/dispatch [:resize-nodes (-> % .-target .-value)])}]])
 
 (defn main-panel []
-  (rf/dispatch-sync [:window-width js/window.innerWidth])
-  (rf/dispatch-sync [:window-height js/window.innerHeight])
-
-  (let [data (rf/subscribe [:data])]
-    [force-viz data]))
+  (rf/dispatch-sync [:window-resize])
+  [:div
+   [node-size-btn]
+   (let [data (rf/subscribe [:data])]
+     [force-viz data])])

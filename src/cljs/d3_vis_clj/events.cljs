@@ -41,17 +41,12 @@
         (assoc-in [:network :nodes] (->mock-nodes))
         (assoc-in [:network :links] (->mock-links)))))
 
-(rf/reg-event-fx
-  :window-width
-  (fn [{:keys [db]} [_ width]]
-    {:db (-> db
-             (assoc-in [:test-data :width] width))}))
-
-(rf/reg-event-fx
-  :window-height
-  (fn [{:keys [db]} [_ height]]
-    {:db (-> db
-             (assoc-in [:test-data :height] height))}))
+(rf/reg-event-db
+  :window-resize
+  (fn [db _]
+    (-> db
+        (assoc-in [:test-data :height] js/window.innerHeight)
+        (assoc-in [:test-data :width] js/window.innerWidth))))
 
 (rf/reg-event-db :set-var
   (fn [db [_ k v]]
@@ -61,5 +56,9 @@
   :set-node-var
   (fn [db [_ i k v]]
     (assoc-in db [:test-data :dataset :nodes i k] v)))
+
+(rf/reg-event-db :resize-nodes
+  (fn [db [_ size]]
+    (assoc-in db [:test-data :node-config :r] size)))
 
 

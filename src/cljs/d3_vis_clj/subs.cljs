@@ -20,3 +20,7 @@
   :get-var
   (fn [db [_ var]]
     (get-in db [:test-data :dataset var])))
+
+(rf/reg-sub :node-size
+  (fn [db]
+    (get-in db [:test-data :node-config :r])))

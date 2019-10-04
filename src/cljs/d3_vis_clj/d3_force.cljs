@@ -105,9 +105,3 @@
            :collide (collide-force ratom)
            :charge (charge-force ratom)
            :center (center-force ratom)}))
-
-(defn drag
-  [node & {:as ons}]
-  (.call node (reduce (fn [x [on on-fn]]
-                        (.on x (name on) on-fn))
-                      (js/d3.drag) ons)))
