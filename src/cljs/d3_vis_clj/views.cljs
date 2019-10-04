@@ -64,6 +64,7 @@
 
 (defn main-panel []
   [:div
+   [:h1 @(rf/subscribe [:name])]
    [node-size-text-box]
    [add-node-btn]
    (let [data (rf/subscribe [:db])]

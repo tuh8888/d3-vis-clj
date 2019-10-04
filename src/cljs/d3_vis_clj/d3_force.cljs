@@ -65,6 +65,13 @@
 (defn constrain-y! [d y]
   (set! (.-fy d) y))
 
+(defn constrain-pos!
+  "Constrains pos of d to (x,y)."
+  [d x y]
+  (doto d
+    (constrain-x! x)
+    (constrain-y! y)))
+
 (defn set-alpha-target! [sim alpha-target]
   (.alphaTarget sim alpha-target))
 
@@ -108,59 +115,69 @@
             sim force-m)
     (when reset? (set-links! sim links))))
 
-(defn set-tick! [sim]
+(defn update-link-elems
+  "Updates link elements with position provided by simulation"
+  [sim link-elems]
+  (rid3-> link-elems
+          {:x1 (fn [_ i] (get-link sim i :source :x))
+           :y1 (fn [_ i] (get-link sim i :source :y))
+           :x2 (fn [_ i] (get-link sim i :target :x))
+           :y2 (fn [_ i] (get-link sim i :target :y))}))
+
+
+(defn update-node-elems
+  "Updates node elements with position provided by simulation"
+  [sim node-elems]
+  (rid3-> node-elems
+          {:transform (fn [_ i]
+                        (translate (get-node sim i :x)
+                                   (get-node sim i :y)))}))
+
+(defn set-tick!
+  [sim]
+  (println "Setting tick")
   (-> sim
       (.on "tick"
            (fn []
-             (set-forces! sim :reset? true)
-             (let [node-elems @(rf/subscribe [:get-data :node-elems])
-                   link-elems @(rf/subscribe [:get-data :link-elems])]
-               (rid3-> node-elems
-                       {:transform (fn [_ i]
-                                     (translate (get-node sim i :x)
-                                                (get-node sim i :y)))})
-               (rid3-> link-elems
-                       {:x1 (fn [_ i] (get-link sim i :source :x))
-                        :y1 (fn [_ i] (get-link sim i :source :y))
-                        :x2 (fn [_ i] (get-link sim i :target :x))
-                        :y2 (fn [_ i] (get-link sim i :target :y))}))))
+             (doto sim
+               (set-forces! :reset? true)
+               (update-node-elems @(rf/subscribe [:get-data :node-elems]))
+               (update-link-elems @(rf/subscribe [:get-data :link-elems])))))
       (set-alpha-target! 0.3)
       (.restart)))
 
 (defn call-drag
   [node sim]
   (letfn [(started [_ i]
-            (println "start")
+            (when-not (event-active?)
+              (-> sim
+                  (set-alpha-target! 0.3)
+                  (.restart)))
             (let [d (get-node sim i)]
-              (when-not (event-active?)
-                (-> sim
-                    (set-alpha-target! 0.3)
-                    (.restart)))
-              (constrain-x! d (coord d :x))
-              (constrain-y! d (coord d :y))))
-
-          (dragged [_ i]
-            (let [d (get-node sim i)]
-              (constrain-x! d (coord js/d3.event :x))
-              (constrain-y! d (coord js/d3.event :y))))
-
+              (constrain-pos! d (coord d :x)
+                                (coord d :y))))
+          (dragged [_ i] (-> sim
+                             (get-node i)
+                             (constrain-pos! (coord js/d3.event :x)
+                                             (coord js/d3.event :y))))
           (ended [_ i]
-            (println "end")
+            (when-not (event-active?)
+              (set-alpha-target! sim 0))
             (let [d (get-node sim i)]
-              (when-not (event-active?)
-                (set-alpha-target! sim 0))
-              (constrain-x! d nil)
-              (constrain-y! d nil)))]
+              (-> sim
+                  (get-node i)
+                  (constrain-pos! nil
+                                  nil))))]
     (.call node (reduce (fn [x [on on-fn]]
                           (.on x (name on) on-fn))
-                        (js/d3.drag)
-                        {:start started
-                         :drag  dragged
-                         :end   ended}))))
+                        (js/d3.drag) {:start started
+                                      :drag  dragged
+                                      :end   ended}))))
 
 (defn restart
   "Restarts the simulation"
   [sim nodes links]
+  (println "Restarting sim")
   (-> sim
       (set-nodes! (clj->js nodes))
       (set-links! (clj->js links)))
