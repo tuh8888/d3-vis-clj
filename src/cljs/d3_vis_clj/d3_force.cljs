@@ -26,9 +26,8 @@
 
 (defn sim-nodes!
   [sim new-nodes & {:keys [tick]}]
-  (-> sim
-      (.nodes new-nodes)
-      (.on "tick" tick)))
+  (cond-> (.nodes sim new-nodes)
+          tick (.on "tick" tick)))
 
 (defn sim-nodes [sim]
   (.nodes sim))
@@ -95,7 +94,7 @@
         r @(rf/subscribe [:node-size])]
     (when collide
       (-> (js/d3.forceCollide)
-          (.radius (fn [node] r))))))
+          (.radius r)))))
 
 (defn set-forces!
   [sim links]

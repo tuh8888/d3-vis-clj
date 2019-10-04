@@ -13,7 +13,6 @@
    {:id "carp" :group 2 :label "Carp" :level 2}
    {:id "pike" :group 2 :label "Pikes" :level 2}])
 
-
 (def links
   [{:target "mammal" :source "dog" :strength 0.7}
    {:target "mammal" :source "cat" :strength 0.7}
@@ -32,7 +31,8 @@
 
 (def default-db
   {:name          "d3-vis-clj"
-   :layout-config {:collide true
+   :layout-config {:heat 0.3
+                   :collide true
                    :center  true
                    :charge  {:strength -120}
                    :link    {:distance 10
