@@ -1,5 +1,6 @@
 (ns d3-vis-clj.events
   (:require [re-frame.core :as rf]
+            [d3-vis-clj.d3-force :as force]
             [d3-vis-clj.db :as db]))
 
 (rf/reg-event-db :initialize-db

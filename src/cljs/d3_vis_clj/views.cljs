@@ -25,14 +25,15 @@
              :y2 (fn [_ i] (force/sim-link sim i :target :y))})))
 
 (defn sim-did-mount [ratom]
-  (let [sim        (force/force-sim ratom)
+  (let [sim        (js/d3.forceSimulation)
         nodes      (prepare-data ratom :nodes)
         links      (prepare-data ratom :links)
         node-elems @(rf/subscribe [:get-data :node-elems])
         link-elems @(rf/subscribe [:get-data :link-elems])]
+    (force/set-forces! sim @ratom)
     (force/sim-nodes! sim nodes :tick (tick-handler sim node-elems link-elems))
     (force/sim-links! sim links)
-    (rf/dispatch [:set-sim sim])))
+    (rf/dispatch-sync [:set-sim sim])))
 
 (defn sim-did-update [ratom])
 
@@ -66,7 +67,7 @@
              {:kind            :elem-with-data
               :tag             "circle"
               :class           "node"
-              :did-mount       (fn [node ratom]
+              :did-mount       (fn [node _]
                                  (let [node-elems (-> node
                                                       (rid3-> {:r    @(rf/subscribe [:node-size])
                                                                :fill get-node-color})

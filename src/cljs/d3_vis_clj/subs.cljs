@@ -7,9 +7,9 @@
   (fn [db]
     (:name db)))
 
-(rf/reg-sub :global-width
+(rf/reg-sub :window-dims
   (fn [db _]
-    (:width db)))
+    [(:width db) (:height db)]))
 
 (rf/reg-sub :db
   (fn [db]

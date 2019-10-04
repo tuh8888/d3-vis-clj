@@ -1,6 +1,7 @@
 (ns d3-vis-clj.d3-force
   (:require [d3-vis-clj.util :as util]
             [cljsjs.d3]
+            [re-frame.core :as rf]
             [goog.object :as gobj]))
 
 (defn translate [x y]
@@ -70,7 +71,7 @@
 
 (defn link-force
   [ratom]
-  (let [{:keys [distance strength]} (get-in @ratom [:layout-config :link])]
+  (let [{:keys [distance strength]} (get-in ratom [:layout-config :link])]
     (cond-> (-> (js/d3.forceLink)
                 (.id util/get-id))
             strength (.strength (fn [link]
@@ -78,29 +79,31 @@
             distance (.distance distance))))
 
 (defn charge-force [ratom]
-  (let [{:keys [strength]} (get-in @ratom [:layout-config :charge])]
+  (let [{:keys [strength]} (get-in ratom [:layout-config :charge])]
     (cond-> (js/d3.forceManyBody)
             strength (.strength strength))))
 
 (defn center-force [ratom]
   (let [{{:keys [center]} :layout-config
-         :keys            [width height]} @ratom]
+         :keys            [width height]} ratom
+        [width height] @(rf/subscribe [:window-dims])]
     (when center
       (js/d3.forceCenter (/ width 2)
                          (/ height 2)))))
 
 (defn collide-force [ratom]
   (let [{{:keys [collide]} :layout-config
-         {:keys [r]}       :node-config} @ratom]
+         {:keys [r]}       :node-config} ratom]
+    (.log js/console @(rf/subscribe [:node-size]))
     (when collide
       (-> (js/d3.forceCollide)
-          (.radius r)))))
+          (.radius (fn [node] r))))))
 
-(defn force-sim
-  [ratom]
+(defn set-forces!
+  [sim ratom]
   (reduce (fn [sim [force force-fn]]
             (.force sim (name force) force-fn))
-          (js/d3.forceSimulation)
+          sim
           {:link (link-force ratom)
            :collide (collide-force ratom)
            :charge (charge-force ratom)
