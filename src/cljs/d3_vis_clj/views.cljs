@@ -2,7 +2,7 @@
   (:require [re-frame.core :as rf]
             [cljsjs.d3]
             [rid3.core :as rid3 :refer [rid3->]]
-            [d3-vis-clj.d3-force :as force]
+            [d3.force-directed.drag :as drag]
             [d3-vis-clj.util :as util]))
 
 (defn get-node-color [d]
@@ -41,7 +41,7 @@
                                  (let [node-elems (-> node
                                                       (rid3-> {:r    @(rf/subscribe [:node-size :network])
                                                                :fill get-node-color})
-                                                      (force/call-drag @(rf/subscribe [:sim :network])))]
+                                                      (drag/call-drag @(rf/subscribe [:sim :network])))]
                                    (rf/dispatch-sync [:set-data :network :node-elems node-elems])))
               :prepare-dataset (fn [_]
                                  (clj->js @(rf/subscribe [:get-data :network :nodes])))}]}])
