@@ -34,3 +34,7 @@
 (rf/reg-sub :layout-config
   (fn [db [_ viz-name force]]
     (get-in db [viz-name :layout-config force])))
+
+(rf/reg-sub :node-to-add
+  (fn [db [_ viz-name]]
+    (get-in db [viz-name :node-to-add])))

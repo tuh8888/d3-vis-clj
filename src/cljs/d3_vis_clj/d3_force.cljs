@@ -181,8 +181,12 @@
   "Restarts the simulation"
   [sim viz-name nodes links]
   (println viz-name "Restarting sim")
-  (doto sim
-    (->
-        (set-nodes! (clj->js nodes))
-        (set-links! (clj->js links)))
-    (set-tick! viz-name)))
+  (let [sim (doto sim
+              (->
+                  (set-nodes! (clj->js nodes))
+                  (set-links! (clj->js links)))
+              (set-tick! viz-name))]
+    (println viz-name "Sim restarted"
+             "nodes:" (get-nodes sim)
+             "links:" (get-links sim))
+    sim))

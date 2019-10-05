@@ -58,8 +58,11 @@
   []
   [:div
    [:button {:type     "button"
-             :on-click #(rf/dispatch [:add-node :network])}
-    "Add Node"]])
+             :on-click #(rf/dispatch [:add-node :network @(rf/subscribe [:node-to-add :network])])}
+    "Add Node"]
+   [:input {:type "text"
+            :value "a"
+            :on-change #(rf/dispatch [:set-node-to-add :network (-> % .-target .-value)])}]])
 
 (defn main-panel []
   [:div

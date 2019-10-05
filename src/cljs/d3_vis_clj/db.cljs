@@ -50,6 +50,6 @@
                              :fill "blue"}
              :link-config   {:stroke-width 1
                              :stroke       "#E5E5E5"}
-             :data          {:nodes {}
-                             :links {}}}})
+             :data          {:nodes []
+                             :links []}}})
 
