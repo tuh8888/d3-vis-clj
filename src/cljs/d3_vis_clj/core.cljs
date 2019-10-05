@@ -20,7 +20,7 @@
 
 (defn render []
   (rf/dispatch-sync [:initialize-db])
-  (rf/dispatch-sync [:initialize-sim])
+  (rf/dispatch-sync [:initialize-sim :network])
   (rf/dispatch-sync [:window-resize])
   (dev-setup)
   (mount-root))

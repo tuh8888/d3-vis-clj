@@ -14,29 +14,28 @@
         (assoc-in [:width] js/window.innerWidth))))
 
 (rf/reg-event-db :set-data
-  (fn [db [_ k v]]
-    (assoc-in db [:data k] v)))
+  (fn [db [_ viz-name k v]]
+    (assoc-in db [viz-name :data k] v)))
 
 (rf/reg-event-db :resize-nodes
-  (fn [db [_ size]]
-    (assoc-in db [:node-config :r] size)))
+  (fn [db [_ viz-name size]]
+    (assoc-in db [viz-name :node-config :r] size)))
 
 (rf/reg-event-db :initialize-sim
-  (fn [{:as db
-        {:keys [nodes links]} :data}]
-    (assoc db :sim (doto (js/d3.forceSimulation)
-                     (force/set-forces!)
-                     (force/restart nodes
-                                    links)))))
-
+  (fn [db [_ viz-name]]
+    (let [{{{:keys [nodes links]} :data} viz-name} db]
+      (assoc-in db [viz-name :sim] (doto (js/d3.forceSimulation)
+                                     (force/set-forces! viz-name)
+                                     (force/restart viz-name
+                                                    nodes links))))))
 (rf/reg-event-db :add-node
-  (fn [{:as db
-        {:keys [nodes links]} :data}]
-    (let [new-node (hash-map :id "new" :group 0 :label "New node" :level 3)
+  (fn [db [_ viz-name]]
+    (let [{{{:keys [nodes links]} :data} viz-name} db
+          new-node (hash-map :id "new" :group 0 :label "New node" :level 3)
           new-link (hash-map :target "mammal" :source "new" :strength 0.1)
-          nodes (conj nodes new-node)
-          links (conj links new-link)]
-      (force/restart (:sim db) nodes links)
+          nodes    (conj nodes new-node)
+          links    (conj links new-link)]
+      (force/restart @(rf/subscribe [:sim viz-name]) viz-name nodes links)
       (-> db
-          (assoc-in [:data :nodes] nodes)
-          (assoc-in [:data :links] links)))))
+          (assoc-in [viz-name :data :nodes] nodes)
+          (assoc-in [viz-name :data :links] links)))))

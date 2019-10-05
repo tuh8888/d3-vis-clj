@@ -30,17 +30,17 @@
    {:target "pike" :source "dog" :strength 0.1}])
 
 (def default-db
-  {:name          "d3-vis-clj"
-   :layout-config {:heat    0.3
-                   :collide true
-                   :center  true
-                   :charge  {:strength -120}
-                   :link    {:distance 10
-                             :strength :true}}
-   :node-config   {:r    10
-                   :fill "blue"}
-   :link-config   {:stroke-width 1
-                   :stroke       "#E5E5E5"}
-   :data          {:nodes nodes
-                   :links links}})
+  {:name    "d3-vis-clj"
+   :network {:layout-config {:heat    0.3
+                             :collide true
+                             :center  true
+                             :charge  {:strength -120}
+                             :link    {:distance 10
+                                       :strength :true}}
+             :node-config   {:r    10
+                             :fill "blue"}
+             :link-config   {:stroke-width 1
+                             :stroke       "#E5E5E5"}
+             :data          {:nodes nodes
+                             :links links}}})
 

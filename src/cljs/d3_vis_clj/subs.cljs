@@ -7,30 +7,30 @@
   (fn [db]
     (:name db)))
 
+(rf/reg-sub :viz
+  (fn [db [_ viz-name]]
+    (get db viz-name)))
+
 (rf/reg-sub :window-dims
-  (fn [db _]
+  (fn [db]
     [(:width db) (:height db)]))
 
-(rf/reg-sub :db
-  (fn [db]
-    db))
-
 (rf/reg-sub :get-data
-  (fn [db [_ var]]
-    (get-in db [:data var])))
+  (fn [db [_ viz-name var]]
+    (get-in db [viz-name :data var])))
 
 (rf/reg-sub :sim
-  (fn [db]
-    (:sim db)))
+  (fn [db [_ viz-name]]
+    (get-in db [viz-name :sim])))
 
 (rf/reg-sub :node-size
-  (fn [db]
-    (get-in db [:node-config :r])))
+  (fn [db [_ viz-name]]
+    (get-in db [viz-name :node-config :r])))
 
 (rf/reg-sub :link-config
-  (fn [db]
-    (get db :link-config)))
+  (fn [db [_ viz-name]]
+    (get-in db [viz-name :link-config])))
 
 (rf/reg-sub :layout-config
-  (fn [db [_ force]]
-    (get-in db [:layout-config force])))
+  (fn [db [_ viz-name force]]
+    (get-in db [viz-name :layout-config force])))
