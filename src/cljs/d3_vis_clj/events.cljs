@@ -34,15 +34,18 @@
     (assoc-in db [viz-name :node-to-add] (keyword node-id))))
 
 (rf/reg-event-db :add-node
-  (fn [db [_ viz-name node-id]]
-    (let [{{{:keys [nodes links]} :data} viz-name} db
-          new-node (hash-map :id "new" :group 0 :label "New node" :level 3)
-          nodes    (conj nodes new-node)
-          #_links    #_(conj links new-link)]
-      (force/restart @(rf/subscribe [:sim viz-name]) viz-name nodes links)
-      (-> db
-          (assoc-in [viz-name :data :nodes] nodes)
-          (assoc-in [viz-name :data :links] links)))))
+  (fn [db [_ viz-name]]
+    (if-let [new-node (get-in db [:all-data :mops @(rf/subscribe [:node-to-add :network])])]
+      (let [{{{:keys [nodes links]} :data} viz-name} db
+            nodes    (conj nodes new-node)
+            #_links    #_(conj links new-link)]
+        (println nodes)
+        (force/restart @(rf/subscribe [:sim viz-name]) viz-name nodes links)
+        (-> db
+            (assoc-in [viz-name :data :nodes] nodes)
+            (assoc-in [viz-name :data :links] links)))
+      db)))
+
 
 (rf/reg-event-db :add-link
   (fn [db [_ viz-name]]

@@ -19,6 +19,10 @@
   (fn [db [_ viz-name var]]
     (get-in db [viz-name :data var])))
 
+(rf/reg-sub :hierarchy
+  (fn [db]
+    (get-in db [:all-data :hierarchy])))
+
 (rf/reg-sub :sim
   (fn [db [_ viz-name]]
     (get-in db [viz-name :sim])))

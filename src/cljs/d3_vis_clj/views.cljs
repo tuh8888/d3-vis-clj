@@ -2,15 +2,14 @@
   (:require [re-frame.core :as rf]
             [cljsjs.d3]
             [rid3.core :as rid3 :refer [rid3->]]
-            [goog.object :as gobj]
-            [d3-vis-clj.d3-force :as force]))
+            [d3-vis-clj.d3-force :as force]
+            [d3-vis-clj.util :as util]))
 
-(defn get-node-color [node]
-  (let [level (gobj/get node "level")]
-    (case level
-      1 "red"
-      2 "blue"
-      3 "green")))
+(defn get-node-color [d]
+  (let [id (keyword (util/get-id d))]
+    (cond (isa? @(rf/subscribe [:hierarchy]) id :A) "red"
+          (isa? @(rf/subscribe [:hierarchy]) id :B) "blue"
+          :default "green")))
 
 (defn force-viz [ratom]
   [rid3/viz
@@ -58,10 +57,10 @@
   []
   [:div
    [:button {:type     "button"
-             :on-click #(rf/dispatch [:add-node :network @(rf/subscribe [:node-to-add :network])])}
+             :on-click #(rf/dispatch [:add-node :network])}
     "Add Node"]
    [:input {:type "text"
-            :value "a"
+            :value @(rf/subscribe [:node-to-add :network])
             :on-change #(rf/dispatch [:set-node-to-add :network (-> % .-target .-value)])}]])
 
 (defn main-panel []
