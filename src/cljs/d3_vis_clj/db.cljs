@@ -1,5 +1,14 @@
 (ns d3-vis-clj.db)
 
+(def example-mops
+  {:a {:id :a :name "a" :slots {:r1 :b
+                                :r2 :c
+                                :r3 :d}}
+   :b {:id :b :name "b" :slots {:r1 :c
+                                :r2 :b}}
+   :c {:id :c :name "c"}
+   :d {:id :d :name "d" :slots {:r1 :a}}})
+
 (def nodes
   [{:id "mammal" :group 0 :label "Mammals" :level 1}
    {:id "dog" :group 0 :label "Dogs" :level 2}
@@ -41,6 +50,6 @@
                              :fill "blue"}
              :link-config   {:stroke-width 1
                              :stroke       "#E5E5E5"}
-             :data          {:nodes nodes
-                             :links links}}})
+             :data          {:nodes {}
+                             :links {}}}})
 
