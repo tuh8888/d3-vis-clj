@@ -32,7 +32,9 @@
                                                            :stroke       stroke})]
                                    (rf/dispatch-sync [:set-data :network :link-elems link-elems])))
               :prepare-dataset (fn [_]
-                                 (clj->js @(rf/subscribe [:get-data :network :links])))}
+                                 (-> @(rf/subscribe [:force-layout :network])
+                                     (get-in [:data :links])
+                                     (clj->js)))}
 
              {:kind            :elem-with-data
               :tag             "circle"
@@ -41,17 +43,20 @@
                                  (let [node-elems (-> node
                                                       (rid3-> {:r    @(rf/subscribe [:node-size :network])
                                                                :fill get-node-color})
-                                                      (drag/call-drag @(rf/subscribe [:sim :network])))]
+                                                      (drag/call-drag (rf/subscribe [:force-layout :network])))]
                                    (rf/dispatch-sync [:set-data :network :node-elems node-elems])))
               :prepare-dataset (fn [_]
-                                 (clj->js @(rf/subscribe [:get-data :network :nodes])))}]}])
+                                 (-> @(rf/subscribe [:force-layout :network])
+                                     (get-in [:data :nodes])
+                                     (clj->js)))}]}])
 
 (defn node-size-text-box []
   [:div
    "Node size: "
    [:input {:type      "text"
             :value     @(rf/subscribe [:node-size :network])
-            :on-change #(rf/dispatch [:resize-nodes :network  (util/text-value %)])}]])
+            :on-change #(rf/dispatch [:resize-nodes :network
+                                      (util/text-value %)])}]])
 
 (defn add-node-btn
   []
@@ -61,12 +66,13 @@
     "Add Node"]
    [:input {:type "text"
             :value @(rf/subscribe [:node-to-add :network])
-            :on-change #(rf/dispatch [:set-node-to-add :network (util/text-value %)])}]])
+            :on-change #(rf/dispatch [:set-node-to-add :network
+                                      (util/text-value %)])}]])
 
 (defn main-panel []
   [:div
    [:h1 @(rf/subscribe [:name])]
    [node-size-text-box]
    [add-node-btn]
-   (let [data (rf/subscribe [:viz :network])]
+   (let [data (rf/subscribe [:force-layout :network])]
      [force-viz data])])

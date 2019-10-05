@@ -15,47 +15,42 @@
   [sim new-nodes]
   (.nodes sim new-nodes))
 
-(defn ^:private link-force
-  [viz-name]
-  (let [{:keys [distance strength]} @(rf/subscribe [:layout-config viz-name :link])]
-    (cond-> (-> (js/d3.forceLink)
-                (.id d3-util/get-id))
-            strength (.strength (fn [link] (.-strength link)))
-            distance (.distance distance))))
-
-(defn ^:private charge-force
-  [viz-name]
-  (let [{:keys [strength]} (rf/subscribe [:layout-config viz-name :charge])]
-    (cond-> (js/d3.forceManyBody)
-            strength (.strength strength))))
-
-(defn ^:private center-force
-  [viz-name]
-  (let [center @(rf/subscribe [:layout-config viz-name :center])
-        [width height] @(rf/subscribe [:window-dims])]
-    (when center
-      (js/d3.forceCenter (/ width 2)
-                         (/ height 2)))))
-
-(defn ^:private collide-force
-  [viz-name]
-  (let [collide @(rf/subscribe [:layout-config viz-name :collide])
-        r       @(rf/subscribe [:node-size viz-name])]
-    (when collide
-      (-> (js/d3.forceCollide)
-          (.radius r)))))
-
 (defn set-forces!
-  [sim viz-name & {:keys [reset?]}]
-  (let [links   (when reset? (util/get-links sim))
-        force-m {:link    (link-force viz-name)
-                 :collide (collide-force viz-name)
-                 :charge  (charge-force viz-name)
-                 :center  (center-force viz-name)}]
-    (reduce (fn [sim [force force-fn]]
-              (.force sim (name force) force-fn))
-            sim force-m)
-    (when reset? (set-links! sim links))))
+  [sim config & {:keys [reset?]}]
+  (letfn [(link-force []
+            (let [{:keys [distance strength]} (get-in config [:layout-config :link])]
+              (cond-> (-> (js/d3.forceLink)
+                          (.id d3-util/get-id))
+                      strength (.strength (fn [link] (.-strength link)))
+                      distance (.distance distance))))
+
+          (charge-force []
+            (let [{:keys [strength]} (get-in config [:layout-config :charge])]
+              (cond-> (js/d3.forceManyBody)
+                      strength (.strength strength))))
+
+          (center-force []
+            (let [center (get-in config [:layout-config :center])
+                  [width height] @(rf/subscribe [:window-dims])]
+              (when center
+                (js/d3.forceCenter (/ width 2)
+                                   (/ height 2)))))
+
+          (collide-force []
+            (let [collide (get-in config [:layout-config :collide])
+                  r       (get-in config [:node-config :r])]
+              (when collide
+                (-> (js/d3.forceCollide)
+                    (.radius r)))))]
+    (let [links   (when reset? (util/get-links sim))
+          force-m {:link    link-force
+                   :collide collide-force
+                   :charge  charge-force
+                   :center  center-force}]
+      (reduce (fn [sim [force force-fn]]
+                (.force sim (name force) (force-fn)))
+              sim force-m)
+      (when reset? (set-links! sim links)))))
 
 (defn ^:private update-link-elems
   "Updates link elements with position provided by simulation"
@@ -76,36 +71,44 @@
                                         (util/get-node sim i :y)))}))
 
 (defn ^:private set-tick!
-  [sim viz-name]
-  (println viz-name "Setting tick")
+  [sim ratom]
+  (println "Setting tick")
   (-> sim
       (.on "tick"
            (fn []
              (doto sim
-               (set-forces! viz-name :reset? true)
-               (update-node-elems @(rf/subscribe [:get-data viz-name :node-elems]))
-               (update-link-elems @(rf/subscribe [:get-data viz-name :link-elems])))))
+               (set-forces! @ratom :reset? true)
+               (update-node-elems (get-in @ratom [:data :node-elems]))
+               (update-link-elems (get-in @ratom [:data :link-elems])))))
       (util/set-alpha-target! 0.3)
       (.restart)))
 
-(defn restart
+(defn ^:private -restart
   "Restarts the simulation"
-  [sim viz-name nodes links]
-  (println viz-name "Restarting sim")
+  [sim ratom & {:keys [nodes links]}]
+  (println "Restarting sim")
   (let [sim (doto sim
               (->
-                (set-nodes! (clj->js nodes))
-                (set-links! (clj->js links)))
-              (set-tick! viz-name))]
-    (println viz-name "Sim restarted"
+                (set-nodes! (clj->js (or nodes
+                                         (get-in @ratom [:data :nodes]))))
+                (set-links! (clj->js (or links
+                                         (get-in @ratom [:data :links])))))
+              (set-tick! ratom))]
+    (println "Sim restarted"
              "nodes:" (alength (util/get-nodes sim))
              "links:" (alength (util/get-links sim)))
     sim))
 
+(defn restart
+  "Restarts the simulation"
+  [config & {:keys [nodes links]}]
+  ((:restart config) :nodes nodes :links links))
+
 (defn new-sim
   "Creates and starts a new simulation."
-  [viz-name nodes links]
-  (doto (js/d3.forceSimulation)
-    (set-forces! viz-name)
-    (restart viz-name
-             nodes links)))
+  [ratom]
+  (let [sim (doto (js/d3.forceSimulation)
+              (set-forces! @ratom)
+              (-restart ratom))]
+    {:sim     sim
+     :restart (partial -restart sim ratom)}))

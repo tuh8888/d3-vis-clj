@@ -6,13 +6,13 @@
                   (derive :x2 :B)
                   (derive :x3 :A)
                   (derive :x4 :B))
-   :mops {:x1 {:id :x1 :name "a" :slots {:r1 :x2
-                                         :r2 :x3
-                                         :r3 :x4}}
-          :x2 {:id :x2 :name "b" :slots {:r1 :x3
-                                         :r2 :x3}}
-          :x3 {:id :x3 :name "c"}
-          :x4 {:id :x4 :name "d" :slots {:r1 :x1}}}})
+   :mops      {:x1 {:id :x1 :name "a" :slots {:r1 :x2
+                                              :r2 :x3
+                                              :r3 :x4}}
+               :x2 {:id :x2 :name "b" :slots {:r1 :x3
+                                              :r2 :x3}}
+               :x3 {:id :x3 :name "c"}
+               :x4 {:id :x4 :name "d" :slots {:r1 :x1}}}})
 
 (def nodes
   [{:id "mammal" :group 0 :label "Mammals" :level 1}
@@ -44,17 +44,16 @@
    {:target "pike" :source "dog" :strength 0.1}])
 
 (def default-db
-  {:name    "d3-vis-clj"
+  {:name     "d3-vis-clj"
    :all-data example-mops
-   :network {:layout-config {:heat    0.3
-                             :collide true
-                             :center  true
-                             :charge  {:strength -120}
-                             :link    {:distance 10
-                                       :strength :true}}
-             :node-config   {:r    10
-                             :fill "blue"}
-             :link-config   {:stroke-width 1
-                             :stroke       "#E5E5E5"}
-             :data          {:nodes []
-                             :links []}}})
+   :network  {:layout-config {:heat    0.3
+                              :collide true
+                              :center  true
+                              :charge  {:strength -120}
+                              :link    {:distance 10
+                                        :strength :true}}
+              :node-config   {:r    10}
+              :link-config   {:stroke-width 1
+                              :stroke       "#E5E5E5"}
+              :data          {:nodes []
+                              :links []}}})

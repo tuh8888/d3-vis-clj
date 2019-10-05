@@ -17,23 +17,23 @@
     (constrain-y! y)))
 
 (defn call-drag
-  [node sim]
+  [node ratom]
   (letfn [(started [_ i]
             (when-not (util/event-active?)
-              (-> sim
+              (-> (get @ratom :sim)
                   (util/set-alpha-target! 0.3)
                   (.restart)))
-            (let [d (util/get-node sim i)]
+            (let [d (util/get-node (get @ratom :sim) i)]
               (constrain-pos! d (util/coord d :x)
                               (util/coord d :y))))
-          (dragged [_ i] (-> sim
+          (dragged [_ i] (-> (get @ratom :sim)
                              (util/get-node i)
                              (constrain-pos! (util/coord js/d3.event :x)
                                              (util/coord js/d3.event :y))))
           (ended [_ i]
             (when-not (util/event-active?)
-              (util/set-alpha-target! sim 0))
-            (let [d (util/get-node sim i)]
+              (util/set-alpha-target! (get @ratom :sim) 0))
+            (let [d (util/get-node (get @ratom :sim) i)]
               (constrain-pos! d nil nil)))]
     (.call node (reduce (fn [x [on on-fn]]
                           (.on x (name on) on-fn))
