@@ -51,7 +51,7 @@
    "Node size: "
    [:input {:type      "text"
             :value     @(rf/subscribe [:node-size :network])
-            :on-change #(rf/dispatch [:resize-nodes :network  (-> % .-target .-value)])}]])
+            :on-change #(rf/dispatch [:resize-nodes :network  (util/text-value %)])}]])
 
 (defn add-node-btn
   []
@@ -61,7 +61,7 @@
     "Add Node"]
    [:input {:type "text"
             :value @(rf/subscribe [:node-to-add :network])
-            :on-change #(rf/dispatch [:set-node-to-add :network (-> % .-target .-value)])}]])
+            :on-change #(rf/dispatch [:set-node-to-add :network (util/text-value %)])}]])
 
 (defn main-panel []
   [:div

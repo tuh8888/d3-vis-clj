@@ -2,49 +2,51 @@
   (:require [d3-vis-clj.util :as util]
             [cljsjs.d3]
             [re-frame.core :as rf]
-            [rid3.core :as rid3 :refer [rid3->]]
-            [goog.object :as gobj]))
+            [rid3.core :refer [rid3->]]))
 
-(defn translate [x y]
+(defn ^:private translate
+  [x y]
   (str "translate(" x "," y ")"))
 
-(defn coord [d x-y]
+(defn ^:private coord
+  [d x-y]
   (case x-y
     :x (.-x d)
     :y (.-y d)))
 
-(defn set-links!
+(defn ^:private set-links!
   [sim new-links]
   (-> sim
       (.force "link")
       (.links new-links)))
 
-(defn get-links
+(defn ^:private get-links
   [sim]
   (-> sim
       (.force "link")
       (.links)))
 
-(defn set-nodes!
+(defn ^:private set-nodes!
   [sim new-nodes]
   (.nodes sim new-nodes))
 
-(defn get-nodes [sim]
+(defn ^:private get-nodes
+  [sim]
   (.nodes sim))
 
-(defn get-node
+(defn ^:private get-node
   ([sim i]
    (-> sim (get-nodes) (get i)))
   ([sim i c]
    (-> sim (get-node i) (coord c))))
 
-(defn link-endpoint
+(defn ^:private link-endpoint
   [link end]
   (case end
     :source (.-source link)
     :target (.-target link)))
 
-(defn get-link
+(defn ^:private get-link
   ([sim i]
    (-> sim (get-links) (get i)))
   ([sim i end]
@@ -52,45 +54,48 @@
   ([sim i end c]
    (-> sim (get-link i end) (coord c))))
 
-(defn event-active? []
+(defn ^:private event-active?
+  []
   (-> js/d3
       (.-event)
       (.-active)
       (zero?)
       (not)))
 
-(defn constrain-x! [d x]
+(defn ^:private constrain-x!
+  [d x]
   (set! (.-fx d) x))
 
-(defn constrain-y! [d y]
+(defn ^:private constrain-y!
+  [d y]
   (set! (.-fy d) y))
 
-(defn constrain-pos!
+(defn ^:private constrain-pos!
   "Constrains pos of d to (x,y)."
   [d x y]
   (doto d
     (constrain-x! x)
     (constrain-y! y)))
 
-(defn set-alpha-target! [sim alpha-target]
+(defn ^:private set-alpha-target!
+  [sim alpha-target]
   (.alphaTarget sim alpha-target))
 
-(defn link-force
+(defn ^:private link-force
   [viz-name]
   (let [{:keys [distance strength]} @(rf/subscribe [:layout-config viz-name :link])]
     (cond-> (-> (js/d3.forceLink)
                 (.id util/get-id))
-            strength (.strength (fn [link]
-                                  (gobj/get link "strength")))
+            strength (.strength (fn [link] (.-strength link)))
             distance (.distance distance))))
 
-(defn charge-force
+(defn ^:private charge-force
   [viz-name]
   (let [{:keys [strength]} (rf/subscribe [:layout-config viz-name :charge])]
     (cond-> (js/d3.forceManyBody)
             strength (.strength strength))))
 
-(defn center-force
+(defn ^:private center-force
   [viz-name]
   (let [center @(rf/subscribe [:layout-config viz-name :center])
         [width height] @(rf/subscribe [:window-dims])]
@@ -98,7 +103,7 @@
       (js/d3.forceCenter (/ width 2)
                          (/ height 2)))))
 
-(defn collide-force
+(defn ^:private collide-force
   [viz-name]
   (let [collide @(rf/subscribe [:layout-config viz-name :collide])
         r       @(rf/subscribe [:node-size viz-name])]
@@ -118,7 +123,7 @@
             sim force-m)
     (when reset? (set-links! sim links))))
 
-(defn update-link-elems
+(defn ^:private update-link-elems
   "Updates link elements with position provided by simulation"
   [sim link-elems]
   (rid3-> link-elems
@@ -128,7 +133,7 @@
            :y2 (fn [_ i] (get-link sim i :target :y))}))
 
 
-(defn update-node-elems
+(defn ^:private update-node-elems
   "Updates node elements with position provided by simulation"
   [sim node-elems]
   (rid3-> node-elems
@@ -136,7 +141,7 @@
                         (translate (get-node sim i :x)
                                    (get-node sim i :y)))}))
 
-(defn set-tick!
+(defn ^:private set-tick!
   [sim viz-name]
   (println viz-name "Setting tick")
   (-> sim

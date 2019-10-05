@@ -46,7 +46,6 @@
             (assoc-in [viz-name :data :links] links)))
       db)))
 
-
 (rf/reg-event-db :add-link
   (fn [db [_ viz-name]]
     (let [{{{:keys [nodes links]} :data} viz-name} db
