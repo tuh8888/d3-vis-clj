@@ -32,11 +32,13 @@
 
 (rf/reg-event-fx :add-node
   (fn [{:keys [db]} [_ viz-name]]
-    (when-let [new-node (get-in db [:all-data :mops @(rf/subscribe [:node-to-add viz-name])])]
-      (let [{{{:keys [nodes]} :data :as config} viz-name} db
-            nodes (conj nodes new-node)]
-        {:restart-sim [config nodes]
-         :db          (assoc-in db [viz-name :data :nodes] nodes)}))))
+    (let [node-id  (get-in db [viz-name :node-to-add])
+          new-node (get-in db [:all-data :mops node-id])]
+      (when new-node
+        (let [{{{:keys [nodes]} :data :as config} viz-name} db
+              nodes (conj nodes new-node)]
+          {:restart-sim [config nodes]
+           :db          (assoc-in db [viz-name :data :nodes] nodes)})))))
 
 (defn slots->links
   [id slots]
