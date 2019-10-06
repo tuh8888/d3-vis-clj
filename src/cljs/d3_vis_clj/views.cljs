@@ -13,60 +13,66 @@
           (isa? @(rf/subscribe [:hierarchy]) id :B) "blue"
           :default "green")))
 
+(defn link-did-mount
+  [node]
+  (let [{:keys [stroke-width stroke]} @(rf/subscribe [:link-config :network])]
+    (rid3-> node
+            {:stroke-width stroke-width
+             :stroke       stroke})))
+
+
 (defn node-did-mount
-  [node _]
-  (let [node-elems (-> node
-                       (rid3-> {:r    @(rf/subscribe [:node-size :network])
-                                :fill get-node-color})
-                       (drag/call-drag (rf/subscribe [:force-layout :network]))
-                       (.on "mouseover"
-                            (fn [_ i]
-                              (rf/dispatch [:set-hovered :network i true])))
-                       (.on "mouseout"
-                            (fn [_ i]
-                              (rf/dispatch [:set-hovered :network i false])))
-                       (.on "click"
-                            (fn [_ i]
-                              (println "here")
-                              (rf/dispatch [:expand-node :network i])))
-                       #_(.on "mouseup" (fn [_ i])))]
+  [node]
+  (-> node
+      (rid3-> {:r    @(rf/subscribe [:node-size :network])
+               :fill get-node-color})
+      (drag/call-drag (rf/subscribe [:force-layout :network]))
+      (.on "mouseover"
+           (fn [_ i]
+             (rf/dispatch [:set-hovered :network i true])))
+      (.on "mouseout"
+           (fn [_ i]
+             (rf/dispatch [:set-hovered :network i false])))
+      (.on "click"
+           (fn [_ i]
+             (println "here")
+             (rf/dispatch [:expand-node :network i])))))
 
+(defn prepare-data
+  [viz-name var]
+  (-> @(rf/subscribe [:force-layout viz-name])
+      (get-in [:data var])
+      (clj->js)))
 
-    (rf/dispatch-sync [:set-data :network :node-elems node-elems])))
 
 (defn force-viz [ratom]
-  [rid3/viz
-   {:id     "force"
-    :ratom  ratom
-    :svg    {:did-mount (fn [node _]
-                          (let [[width height] @(rf/subscribe [:window-dims])]
-                            (rid3-> node
-                                    {:width  width
-                                     :height height
-                                     :style  {:background-color "grey"}})))}
+  (let [viz-name :network]
+    [rid3/viz
+     {:id     "force"
+      :ratom  ratom
+      :svg    {:did-mount (fn [node _]
+                            (let [[width height] @(rf/subscribe [:window-dims])]
+                              (rid3-> node
+                                      {:width  width
+                                       :height height
+                                       :style  {:background-color "grey"}})))}
 
-    :pieces [{:kind            :elem-with-data
-              :tag             "line"
-              :class           "link"
-              :did-mount       (fn [node _]
-                                 (let [{:keys [stroke-width stroke]} @(rf/subscribe [:link-config :network])
-                                       link-elems (rid3-> node
-                                                          {:stroke-width stroke-width
-                                                           :stroke       stroke})]
-                                   (rf/dispatch-sync [:set-data :network :link-elems link-elems])))
-              :prepare-dataset (fn [_]
-                                 (-> @(rf/subscribe [:force-layout :network])
-                                     (get-in [:data :links])
-                                     (clj->js)))}
-
-             {:kind            :elem-with-data
-              :tag             "circle"
-              :class           "node"
-              :did-mount       node-did-mount
-              :prepare-dataset (fn [_]
-                                 (-> @(rf/subscribe [:force-layout :network])
-                                     (get-in [:data :nodes])
-                                     (clj->js)))}]}])
+      :pieces [{:kind            :elem-with-data
+                :tag             "line"
+                :class           "link"
+                :did-mount       (fn [node _]
+                                   (rf/dispatch-sync
+                                     [:set-data viz-name
+                                      :link-elems (link-did-mount node)]))
+                :prepare-dataset (fn [_] (prepare-data viz-name :links))}
+               {:kind            :elem-with-data
+                :tag             "circle"
+                :class           "node"
+                :did-mount       (fn [node _]
+                                   (rf/dispatch-sync
+                                     [:set-data viz-name
+                                      :node-elems (node-did-mount node)]))
+                :prepare-dataset (fn [_] (prepare-data viz-name :nodes))}]}]))
 
 (defn node-size-text-box []
   [:div
