@@ -56,20 +56,22 @@
 (defn ^:private update-link-elems
   "Updates link elements with position provided by simulation"
   [sim link-elems]
-  (rid3-> link-elems
-          {:x1 (fn [_ i] (util/get-link sim i :source :x))
-           :y1 (fn [_ i] (util/get-link sim i :source :y))
-           :x2 (fn [_ i] (util/get-link sim i :target :x))
-           :y2 (fn [_ i] (util/get-link sim i :target :y))}))
+  (when link-elems
+    (rid3-> link-elems
+            {:x1 (fn [_ i] (util/get-link sim i :source :x))
+             :y1 (fn [_ i] (util/get-link sim i :source :y))
+             :x2 (fn [_ i] (util/get-link sim i :target :x))
+             :y2 (fn [_ i] (util/get-link sim i :target :y))})))
 
 
 (defn ^:private update-node-elems
   "Updates node elements with position provided by simulation"
   [sim node-elems]
-  (rid3-> node-elems
-          {:transform (fn [_ i]
-                        (util/translate (util/get-node sim i :x)
-                                        (util/get-node sim i :y)))}))
+  (when node-elems
+    (rid3-> node-elems
+            {:transform (fn [_ i]
+                          (util/translate (util/get-node sim i :x)
+                                          (util/get-node sim i :y)))})))
 
 (defn ^:private set-tick!
   [sim ratom]

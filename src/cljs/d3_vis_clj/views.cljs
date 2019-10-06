@@ -2,7 +2,6 @@
   (:require [re-frame.core :as rf]
             [cljsjs.d3]
             [rid3.core :as rid3 :refer [rid3->]]
-            [d3.force-directed.drag :as drag]
             [goog.object :as gobj]
             [d3-vis-clj.util :as util]))
 
@@ -28,7 +27,7 @@
   (-> node
       (rid3-> {:r    (get-in @ratom [:node-config :r])
                :fill (fn [_ i] (node-color (get-in @ratom [:data :nodes i])))})
-      (.call (:drag @ratom))
+      (.call (or (:drag @ratom) #()))
       (util/set-ons
         :mouseover (fn [_ i] (>evt [:set-hovered viz-name i true]))
         :mouseout (fn [_ i] (>evt [:set-hovered viz-name i false]))
@@ -46,45 +45,45 @@
       (get-in [:data var])
       (clj->js)))
 
-(defn force-viz [ratom]
-  (let [viz-name :network]
-    (>evt [:initialize-window-resize viz-name
-           js/window.innerWidth js/window.innerHeight])
-    (fn []
-      [rid3/viz
-       {:id     "force"
-        :ratom  ratom
-        :svg    {:did-mount (fn [node ratom]
-                              (let [{:keys [width height]} @ratom]
-                                (rid3-> node
-                                        {:width  width
-                                         :height height
-                                         :style  {:background-color "grey"}})))}
+(defn force-viz [viz-name ratom]
+  [rid3/viz
+   {:id     (name viz-name)
+    :ratom  ratom
+    :svg    {:did-mount  (fn [_ v]
+                           (rf/dispatch-sync [:initialize-force-layout viz-name]))
 
-        :pieces [{:kind            :elem-with-data
-                  :tag             "line"
-                  :class           "link"
-                  :did-mount       (fn [node _]
-                                     (rf/dispatch-sync
-                                       [:set-data viz-name
-                                        :link-elems (link-did-mount node viz-name)]))
-                  :prepare-dataset (fn [_] (prepare-data viz-name :links))}
-                 {:kind            :elem-with-data
-                  :tag             "circle"
-                  :class           "node"
-                  :did-mount       (fn [node ratom]
-                                     (rf/dispatch-sync
-                                       [:set-data viz-name
-                                        :node-elems (node-did-mount node viz-name ratom)]))
-                  :prepare-dataset (fn [_] (prepare-data viz-name :nodes))}
-                 {:kind            :elem-with-data
-                  :tag             "text"
-                  :class           "texts"
-                  :did-mount       (fn [node _]
-                                     (rf/dispatch-sync
-                                       [:set-data viz-name
-                                        :text-elems (text-did-mount node viz-name)]))
-                  :prepare-dataset (fn [_] (prepare-data viz-name :nodes))}]}])))
+
+             :did-update (fn [node ratom]
+                           (let [{:keys [width height]} @ratom]
+                             (rid3-> node
+                                     {:width  width
+                                      :height height
+                                      :style  {:background-color "grey"}})))}
+
+    :pieces [{:kind            :elem-with-data
+              :tag             "line"
+              :class           "link"
+              :did-mount       (fn [node _]
+                                 (rf/dispatch-sync
+                                   [:set-data viz-name
+                                    :link-elems (link-did-mount node viz-name)]))
+              :prepare-dataset (fn [_] (prepare-data viz-name :links))}
+             {:kind            :elem-with-data
+              :tag             "circle"
+              :class           "node"
+              :did-mount       (fn [node ratom]
+                                 (rf/dispatch-sync
+                                   [:set-data viz-name
+                                    :node-elems (node-did-mount node viz-name ratom)]))
+              :prepare-dataset (fn [_] (prepare-data viz-name :nodes))}
+             {:kind            :elem-with-data
+              :tag             "text"
+              :class           "texts"
+              :did-mount       (fn [node _]
+                                 (rf/dispatch-sync
+                                   [:set-data viz-name
+                                    :text-elems (text-did-mount node viz-name)]))
+              :prepare-dataset (fn [_] (prepare-data viz-name :nodes))}]}])
 
 
 (defn node-size-text-box []
@@ -111,5 +110,6 @@
    [:h1 @(rf/subscribe [:name])]
    [node-size-text-box]
    [add-node-btn]
-   (let [data (rf/subscribe [:force-layout :network])]
-     [force-viz data])])
+   (let [viz-name :network
+         ratom    (rf/subscribe [:force-layout viz-name])]
+     [force-viz viz-name ratom])])

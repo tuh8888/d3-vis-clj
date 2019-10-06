@@ -43,17 +43,19 @@
    {:target "fox" :source "ant" :strength 0.1}
    {:target "pike" :source "dog" :strength 0.1}])
 
+(def default-force-layout
+  {:layout-config {:heat    0.3
+                   :collide true
+                   :center  true
+                   :charge  {:strength -120}
+                   :link    {:distance 10
+                             :strength :true}}
+   :node-config   {:r 10}
+   :link-config   {:stroke-width 1
+                   :stroke       "#E5E5E5"}
+   :data          {:nodes [(get-in example-mops [:mops :x1])]
+                   :links []}})
+
 (def default-db
   {:name     "d3-vis-clj"
-   :all-data example-mops
-   :network  {:layout-config {:heat    0.3
-                              :collide true
-                              :center  true
-                              :charge  {:strength -120}
-                              :link    {:distance 10
-                                        :strength :true}}
-              :node-config   {:r    10}
-              :link-config   {:stroke-width 1
-                              :stroke       "#E5E5E5"}
-              :data          {:nodes [(get-in example-mops [:mops :x1])]
-                              :links []}}})
+   :all-data example-mops})

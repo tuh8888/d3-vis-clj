@@ -21,6 +21,5 @@
 
 (defn render []
   (rf/dispatch-sync [:initialize-db])
-  (rf/dispatch-sync [:initialize-sim :network])
   (dev-setup)
   (mount-root))
