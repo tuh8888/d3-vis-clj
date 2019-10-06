@@ -94,9 +94,9 @@
                 (set-links! (clj->js (or links
                                          (get-in @ratom [:data :links])))))
               (set-tick! ratom))]
-    (println "Sim restarted"
-             "nodes:" (alength (util/get-nodes sim))
-             "links:" (alength (util/get-links sim)))
+    (.log js/console "Sim restarted"
+             "nodes:" (-> sim (util/get-nodes) (alength))
+             "links:" (-> sim (util/get-links) (alength)))
     sim))
 
 (defn restart

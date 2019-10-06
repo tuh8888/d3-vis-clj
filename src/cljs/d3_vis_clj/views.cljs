@@ -3,11 +3,13 @@
             [cljsjs.d3]
             [rid3.core :as rid3 :refer [rid3->]]
             [d3.force-directed.drag :as drag]
+            [goog.object :as gobj]
             [d3-vis-clj.util :as util]))
 
 (defn get-node-color [d]
   (let [id (keyword (util/get-id d))]
-    (cond (isa? @(rf/subscribe [:hierarchy]) id :A) "red"
+    (cond (gobj/get d (name :hovered)) "yellow"
+          (isa? @(rf/subscribe [:hierarchy]) id :A) "red"
           (isa? @(rf/subscribe [:hierarchy]) id :B) "blue"
           :default "green")))
 
@@ -43,7 +45,15 @@
                                  (let [node-elems (-> node
                                                       (rid3-> {:r    @(rf/subscribe [:node-size :network])
                                                                :fill get-node-color})
-                                                      (drag/call-drag (rf/subscribe [:force-layout :network])))]
+                                                      (drag/call-drag (rf/subscribe [:force-layout :network]))
+                                                      (.on "mouseover" (fn [_ i]
+                                                                         (rf/dispatch [:set-hovered :network i true])))
+                                                      (.on "mouseout" (fn [_ i]
+                                                                        (rf/dispatch [:set-hovered :network i false])))
+                                                      (.on "mousedown" (fn [_ i]))
+                                                      (.on "mouseup" (fn [_ i]
+                                                                       (rf/dispatch [:expand-node :network i]))))]
+
                                    (rf/dispatch-sync [:set-data :network :node-elems node-elems])))
               :prepare-dataset (fn [_]
                                  (-> @(rf/subscribe [:force-layout :network])
