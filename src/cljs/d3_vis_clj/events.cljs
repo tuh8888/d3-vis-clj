@@ -30,14 +30,13 @@
   (fn [db [_ viz-name node-id]]
     (assoc-in db [viz-name :node-to-add] (keyword node-id))))
 
-(rf/reg-event-db :add-node
-  (fn [db [_ viz-name]]
-    (if-let [new-node (get-in db [:all-data :mops @(rf/subscribe [:node-to-add viz-name])])]
+(rf/reg-event-fx :add-node
+  (fn [{:keys [db]} [_ viz-name]]
+    (when-let [new-node (get-in db [:all-data :mops @(rf/subscribe [:node-to-add viz-name])])]
       (let [{{{:keys [nodes]} :data :as config} viz-name} db
             nodes (conj nodes new-node)]
-        (layout/restart config :nodes nodes)
-        (assoc-in db [viz-name :data :nodes] nodes))
-      db)))
+        {:restart-sim [config nodes]
+         :db          (assoc-in db [viz-name :data :nodes] nodes)}))))
 
 (rf/reg-event-fx :expand-node
   (fn [{:keys [db]} [_ viz-name i]]
@@ -72,9 +71,9 @@
                          (into nodes))))]
           (let [links (update-links)
                 nodes (update-nodes)]
-            {:db (-> db
-                     (assoc-in [viz-name :data :nodes] nodes)
-                     (assoc-in [viz-name :data :links] links))
+            {:db          (-> db
+                              (assoc-in [viz-name :data :nodes] nodes)
+                              (assoc-in [viz-name :data :links] links))
              :restart-sim [config nodes links]}))))))
 
 (rf/reg-fx :restart-sim
