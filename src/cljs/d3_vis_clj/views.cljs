@@ -6,6 +6,9 @@
             [goog.object :as gobj]
             [d3-vis-clj.util :as util]))
 
+(def <sub (comp deref re-frame.core/subscribe))             ;; aka listen (above)
+(def >evt re-frame.core/dispatch)
+
 (defn link-did-mount
   [node viz-name]
   (let [{:keys [stroke-width stroke]} @(rf/subscribe [:link-config viz-name])]
@@ -32,46 +35,49 @@
 
 (defn prepare-data
   [viz-name var]
-  (-> @(rf/subscribe [:force-layout viz-name])
+  (-> (<sub [:force-layout viz-name])
       (get-in [:data var])
       (clj->js)))
 
 (defn force-viz [ratom]
   (let [viz-name :network]
-    [rid3/viz
-     {:id     "force"
-      :ratom  ratom
-      :svg    {:did-mount (fn [node _]
-                            (let [[width height] @(rf/subscribe [:window-dims])]
-                              (rid3-> node
-                                      {:width  width
-                                       :height height
-                                       :style  {:background-color "grey"}})))}
+    (>evt [:initialize-window-resize viz-name
+           js/window.innerWidth js/window.innerHeight])
+    (fn []
+      [rid3/viz
+       {:id     "force"
+        :ratom  ratom
+        :svg    {:did-mount (fn [node ratom]
+                              (let [{:keys [width height]} @ratom]
+                                (rid3-> node
+                                        {:width  width
+                                         :height height
+                                         :style  {:background-color "grey"}})))}
 
-      :pieces [{:kind            :elem-with-data
-                :tag             "line"
-                :class           "link"
-                :did-mount       (fn [node _]
-                                   (rf/dispatch-sync
-                                     [:set-data viz-name
-                                      :link-elems (link-did-mount node viz-name)]))
-                :prepare-dataset (fn [_] (prepare-data viz-name :links))}
-               {:kind            :elem-with-data
-                :tag             "circle"
-                :class           "node"
-                :did-mount       (fn [node _]
-                                   (rf/dispatch-sync
-                                     [:set-data viz-name
-                                      :node-elems (node-did-mount node viz-name)]))
-                :prepare-dataset (fn [_] (prepare-data viz-name :nodes))}
-               {:kind            :elem-with-data
-                :tag             "text"
-                :class           "texts"
-                :did-mount       (fn [node _]
-                                   (rf/dispatch-sync
-                                     [:set-data viz-name
-                                      :text-elems (text-did-mount node viz-name)]))
-                :prepare-dataset (fn [_] (prepare-data viz-name :nodes))}]}]))
+        :pieces [{:kind            :elem-with-data
+                  :tag             "line"
+                  :class           "link"
+                  :did-mount       (fn [node _]
+                                     (rf/dispatch-sync
+                                       [:set-data viz-name
+                                        :link-elems (link-did-mount node viz-name)]))
+                  :prepare-dataset (fn [_] (prepare-data viz-name :links))}
+                 {:kind            :elem-with-data
+                  :tag             "circle"
+                  :class           "node"
+                  :did-mount       (fn [node ratom]
+                                     (rf/dispatch-sync
+                                       [:set-data viz-name
+                                        :node-elems (node-did-mount node viz-name ratom)]))
+                  :prepare-dataset (fn [_] (prepare-data viz-name :nodes))}
+                 {:kind            :elem-with-data
+                  :tag             "text"
+                  :class           "texts"
+                  :did-mount       (fn [node _]
+                                     (rf/dispatch-sync
+                                       [:set-data viz-name
+                                        :text-elems (text-did-mount node viz-name)]))
+                  :prepare-dataset (fn [_] (prepare-data viz-name :nodes))}]}])))
 
 
 (defn node-size-text-box []

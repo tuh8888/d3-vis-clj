@@ -4,7 +4,8 @@
             [d3-vis-clj.events]
             [d3-vis-clj.subs]
             [d3-vis-clj.views :as views]
-            [d3-vis-clj.config :as config]))
+            [d3-vis-clj.config :as config]
+            [district0x.re-frame.window-fx]))
 
 (enable-console-print!)
 
@@ -21,6 +22,5 @@
 (defn render []
   (rf/dispatch-sync [:initialize-db])
   (rf/dispatch-sync [:initialize-sim :network])
-  (rf/dispatch-sync [:window-resize])
   (dev-setup)
   (mount-root))

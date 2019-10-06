@@ -1,7 +1,6 @@
 (ns d3.force-directed.layout
   (:require [d3-vis-clj.util :as d3-util]
             [cljsjs.d3]
-            [re-frame.core :as rf]
             [rid3.core :refer [rid3->]]
             [d3.force-directed.util :as util]))
 
@@ -31,7 +30,8 @@
 
           (center-force []
             (let [center (get-in config [:layout-config :center])
-                  [width height] @(rf/subscribe [:window-dims])]
+                  width  (get config :width)
+                  height (get config :height)]
               (when center
                 (js/d3.forceCenter (/ width 2)
                                    (/ height 2)))))

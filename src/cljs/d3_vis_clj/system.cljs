@@ -10,7 +10,6 @@
    :app-root (new-ui-component)))
 
 (defn init []
-  (set! js/window.onresize (fn [] (rf/dispatch [:window-resize])))
   (set! system (new-system)))
 
 (defn start []

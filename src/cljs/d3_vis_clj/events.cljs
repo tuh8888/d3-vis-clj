@@ -7,11 +7,22 @@
   (fn [_ _]
     db/default-db))
 
-(rf/reg-event-db :window-resize
-  (fn [db _]
+(rf/reg-event-db :window-resized
+  (fn [db [_ viz-name new-width new-height]]
     (-> db
-        (assoc-in [:height] js/window.innerHeight)
-        (assoc-in [:width] js/window.innerWidth))))
+        (assoc-in [:height] new-height)
+        (assoc-in [:width] new-width)
+        (assoc-in [viz-name :height] new-height)
+        (assoc-in [viz-name :width] new-width))))
+
+(rf/reg-event-fx :initialize-window-resize
+  (fn [{:keys [db]} [_ viz-name init-width init-height]]
+    {:window/on-resize {:dispatch [:window-resized viz-name]}
+     :db               (-> db
+                           (assoc-in [:height] init-height)
+                           (assoc-in [:width] init-width)
+                           (assoc-in [viz-name :height] init-height)
+                           (assoc-in [viz-name :width] init-width))}))
 
 (rf/reg-event-db :set-data
   (fn [db [_ viz-name k v]]
