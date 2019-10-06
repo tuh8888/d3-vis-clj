@@ -16,16 +16,23 @@
             {:stroke-width stroke-width
              :stroke       stroke})))
 
+(defn node-color
+  [{:keys [id hovered]}]
+  (cond hovered "yellow"
+        (isa? @(rf/subscribe [:hierarchy]) id :A) "red"
+        (isa? @(rf/subscribe [:hierarchy]) id :B) "blue"
+        :default "green"))
+
 (defn node-did-mount
-  [node viz-name]
+  [node viz-name ratom]
   (-> node
-      (rid3-> {:r    @(rf/subscribe [:node-size viz-name])
-               :fill (fn [_ i] @(rf/subscribe [:node-color viz-name i]))})
-      (drag/call-drag (rf/subscribe [:force-layout viz-name]))
+      (rid3-> {:r    (get-in @ratom [:node-config :r])
+               :fill (fn [_ i] (node-color (get-in @ratom [:data :nodes i])))})
+      (.call (:drag @ratom))
       (util/set-ons
-        :mouseover (fn [_ i] (rf/dispatch [:set-hovered viz-name i true]))
-        :mouseout (fn [_ i] (rf/dispatch [:set-hovered viz-name i false]))
-        :click (fn [_ i] (rf/dispatch [:expand-node viz-name i])))))
+        :mouseover (fn [_ i] (>evt [:set-hovered viz-name i true]))
+        :mouseout (fn [_ i] (>evt [:set-hovered viz-name i false]))
+        :click (fn [_ i] (>evt [:expand-node viz-name i])))))
 
 (defn text-did-mount
   [node _]

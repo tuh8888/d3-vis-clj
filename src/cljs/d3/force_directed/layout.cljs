@@ -2,7 +2,8 @@
   (:require [d3-vis-clj.util :as d3-util]
             [cljsjs.d3]
             [rid3.core :refer [rid3->]]
-            [d3.force-directed.util :as util]))
+            [d3.force-directed.util :as util]
+            [d3.force-directed.drag :as drag]))
 
 (defn ^:private set-links!
   [sim new-links]
@@ -112,4 +113,5 @@
               (set-forces! @ratom)
               (-restart ratom))]
     {:sim     sim
-     :restart (partial -restart sim ratom)}))
+     :restart (partial -restart sim ratom)
+     :drag    (drag/call-drag ratom)}))

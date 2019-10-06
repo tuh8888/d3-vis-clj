@@ -18,7 +18,7 @@
     (constrain-y! y)))
 
 (defn call-drag
-  [node ratom]
+  [ratom]
   (letfn [(started [_ i]
             (when-not (util/event-active?)
               (-> (get @ratom :sim)
@@ -36,7 +36,7 @@
               (util/set-alpha-target! (get @ratom :sim) 0))
             (let [d (util/get-node (get @ratom :sim) i)]
               (constrain-pos! d nil nil)))]
-    (.call node (d3-util/set-ons (js/d3.drag)
-                                 :start started
-                                 :drag  dragged
-                                 :end   ended))))
+    (d3-util/set-ons (js/d3.drag)
+                     :start started
+                     :drag dragged
+                     :end ended)))

@@ -22,14 +22,6 @@
   (fn [db [_ viz-name]]
     (get-in db [viz-name :node-config :r])))
 
-(rf/reg-sub :node-color
-  (fn [db [_ viz-name i]]
-    (let [{:keys [id hovered]} (get-in db [viz-name :data :nodes i])]
-      (cond hovered "yellow"
-            (isa? @(rf/subscribe [:hierarchy]) id :A) "red"
-            (isa? @(rf/subscribe [:hierarchy]) id :B) "blue"
-            :default "green"))))
-
 (rf/reg-sub :node-to-add
   (fn [db [_ viz-name]]
     (get-in db [viz-name :node-to-add])))
