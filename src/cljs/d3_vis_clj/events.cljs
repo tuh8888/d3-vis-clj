@@ -38,43 +38,43 @@
         {:restart-sim [config nodes]
          :db          (assoc-in db [viz-name :data :nodes] nodes)}))))
 
+(defn slots->links
+  [id slots]
+  (for [[role fillers] slots
+        filler fillers]
+    {:source   id
+     :target   filler
+     :label    role
+     :strength 0.1}))
+
+
 (rf/reg-event-fx :expand-node
   (fn [{:keys [db]} [_ viz-name i]]
-    (letfn []
-      (let [{{{:keys [nodes links]} :data
-              :as                   config} viz-name} db
-            {:keys [id slots]} (get-in db [viz-name :data :nodes i])
-            link-keys [:source :target :label]
-            old-links (->> links
-                           (map #(select-keys % link-keys))
-                           (set))]
-        (letfn [(old-link? [link]
-                  (old-links (select-keys link link-keys)))
-                (update-links []
-                  (let []
-                    (->> (for [[e ns] slots
-                               n ns]
-                           (hash-map :source id
-                                     :target n
-                                     :label e
-                                     :strength 0.1))
-                         (remove old-link?)
-                         (into links))))
-                (update-nodes []
-                  (let [old-node-ids (->> nodes
-                                          (map :id)
-                                          (set))]
-                    (->> slots
-                         (mapcat second)
-                         (map #(get-in db [:all-data :mops %]))
-                         (remove #(old-node-ids (:id %)))
-                         (into nodes))))]
-          (let [links (update-links)
-                nodes (update-nodes)]
-            {:db          (-> db
-                              (assoc-in [viz-name :data :nodes] nodes)
-                              (assoc-in [viz-name :data :links] links))
-             :restart-sim [config nodes links]}))))))
+    (let [{{{:keys [links nodes]} :data
+            :as                   config} viz-name} db
+          {{:keys [id slots]} i} nodes
+          link-keys    [:source :target :label]
+          old-links    (->> links
+                            (map #(select-keys % link-keys))
+                            (set))
+          old-link?    (fn [link] (old-links (select-keys link link-keys)))
+          links        (->> slots
+                            (slots->links id)
+                            (remove old-link?)
+                            (into links))
+          old-node-ids (->> nodes
+                            (map :id)
+                            (set))
+          nodes        (->> slots
+                            (mapcat second)
+                            (map #(get-in db [:all-data :mops %]))
+                            (remove #(old-node-ids (:id %)))
+                            (into nodes))]
+
+      {:db          (-> db
+                        (assoc-in [viz-name :data :nodes] nodes)
+                        (assoc-in [viz-name :data :links] links))
+       :restart-sim [config nodes links]})))
 
 (rf/reg-fx :restart-sim
   (fn [[config nodes links]]
