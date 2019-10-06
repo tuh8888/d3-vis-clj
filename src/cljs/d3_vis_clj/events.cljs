@@ -39,8 +39,8 @@
         (assoc-in db [viz-name :data :nodes] nodes))
       db)))
 
-(rf/reg-event-db :expand-node
-  (fn [db [_ viz-name i]]
+(rf/reg-event-fx :expand-node
+  (fn [{:keys [db]} [_ viz-name i]]
     (letfn []
       (let [{{{:keys [nodes links]} :data
               :as                   config} viz-name} db
@@ -72,10 +72,14 @@
                          (into nodes))))]
           (let [links (update-links)
                 nodes (update-nodes)]
-            (layout/restart config :nodes nodes :links links)
-            (-> db
-                (assoc-in [viz-name :data :nodes] nodes)
-                (assoc-in [viz-name :data :links] links))))))))
+            {:db (-> db
+                     (assoc-in [viz-name :data :nodes] nodes)
+                     (assoc-in [viz-name :data :links] links))
+             :restart-sim [config nodes links]}))))))
+
+(rf/reg-fx :restart-sim
+  (fn [[config nodes links]]
+    (layout/restart config :nodes nodes :links links)))
 
 (rf/reg-event-db :set-hovered
   (fn [db [_ viz-name i val]]
