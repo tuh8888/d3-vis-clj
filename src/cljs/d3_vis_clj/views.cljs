@@ -6,13 +6,6 @@
             [goog.object :as gobj]
             [d3-vis-clj.util :as util]))
 
-(defn get-node-color [d]
-  (let [id (keyword (util/get-id d))]
-    (cond (gobj/get d (name :hovered)) "yellow"
-          (isa? @(rf/subscribe [:hierarchy]) id :A) "red"
-          (isa? @(rf/subscribe [:hierarchy]) id :B) "blue"
-          :default "green")))
-
 (defn link-did-mount
   [node viz-name]
   (let [{:keys [stroke-width stroke]} @(rf/subscribe [:link-config viz-name])]
