@@ -14,31 +14,25 @@
           :default "green")))
 
 (defn link-did-mount
-  [node]
-  (let [{:keys [stroke-width stroke]} @(rf/subscribe [:link-config :network])]
+  [node viz-name]
+  (let [{:keys [stroke-width stroke]} @(rf/subscribe [:link-config viz-name])]
     (rid3-> node
             {:stroke-width stroke-width
              :stroke       stroke})))
 
-
 (defn node-did-mount
-  [node]
+  [node viz-name]
   (-> node
-      (rid3-> {:r    @(rf/subscribe [:node-size :network])
-               :fill get-node-color})
-      (drag/call-drag (rf/subscribe [:force-layout :network]))
-      (.on "mouseover"
-           (fn [_ i]
-             (rf/dispatch [:set-hovered :network i true])))
-      (.on "mouseout"
-           (fn [_ i]
-             (rf/dispatch [:set-hovered :network i false])))
-      (.on "click"
-           (fn [_ i]
-             (rf/dispatch [:expand-node :network i])))))
+      (rid3-> {:r    @(rf/subscribe [:node-size viz-name])
+               :fill (fn [_ i] @(rf/subscribe [:node-color viz-name i]))})
+      (drag/call-drag (rf/subscribe [:force-layout viz-name]))
+      (util/set-ons
+        :mouseover (fn [_ i] (rf/dispatch [:set-hovered viz-name i true]))
+        :mouseout (fn [_ i] (rf/dispatch [:set-hovered viz-name i false]))
+        :click (fn [_ i] (rf/dispatch [:expand-node viz-name i])))))
 
 (defn text-did-mount
-  [node]
+  [node _]
   (-> node
       (rid3-> {:x 5
                :y 0})
@@ -68,7 +62,7 @@
                 :did-mount       (fn [node _]
                                    (rf/dispatch-sync
                                      [:set-data viz-name
-                                      :link-elems (link-did-mount node)]))
+                                      :link-elems (link-did-mount node viz-name)]))
                 :prepare-dataset (fn [_] (prepare-data viz-name :links))}
                {:kind            :elem-with-data
                 :tag             "circle"
@@ -76,7 +70,7 @@
                 :did-mount       (fn [node _]
                                    (rf/dispatch-sync
                                      [:set-data viz-name
-                                      :node-elems (node-did-mount node)]))
+                                      :node-elems (node-did-mount node viz-name)]))
                 :prepare-dataset (fn [_] (prepare-data viz-name :nodes))}
                {:kind            :elem-with-data
                 :tag             "text"
@@ -84,7 +78,7 @@
                 :did-mount       (fn [node _]
                                    (rf/dispatch-sync
                                      [:set-data viz-name
-                                      :text-elems (text-did-mount node)]))
+                                      :text-elems (text-did-mount node viz-name)]))
                 :prepare-dataset (fn [_] (prepare-data viz-name :nodes))}]}]))
 
 

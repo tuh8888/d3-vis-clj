@@ -15,3 +15,10 @@
   "Returns value found in text field"
   [d]
   (-> d (.-target ) (.-value)))
+
+(defn set-ons
+  "Utility function for adding a bunch of ons."
+  [node & {:as ons}]
+  (reduce (fn [node [on on-fn]]
+            (.on node (name on) on-fn))
+          node ons))

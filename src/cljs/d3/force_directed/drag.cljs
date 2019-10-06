@@ -1,5 +1,6 @@
 (ns d3.force-directed.drag
-  (:require [d3.force-directed.util :as util]))
+  (:require [d3.force-directed.util :as util]
+            [d3-vis-clj.util :as d3-util]))
 
 (defn ^:private constrain-x!
   [d x]
@@ -35,8 +36,7 @@
               (util/set-alpha-target! (get @ratom :sim) 0))
             (let [d (util/get-node (get @ratom :sim) i)]
               (constrain-pos! d nil nil)))]
-    (.call node (reduce (fn [x [on on-fn]]
-                          (.on x (name on) on-fn))
-                        (js/d3.drag) {:start started
-                                      :drag  dragged
-                                      :end   ended}))))
+    (.call node (d3-util/set-ons (js/d3.drag)
+                                 :start started
+                                 :drag  dragged
+                                 :end   ended))))
