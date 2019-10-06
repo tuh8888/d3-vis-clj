@@ -41,38 +41,44 @@
 
 (rf/reg-event-db :expand-node
   (fn [db [_ viz-name i]]
-    (let [{{{:keys [nodes links]} :data
-            :as config} viz-name} db
-          {:keys [id slots]} (get-in db [viz-name :data :nodes i])
-          node-ids (->> nodes
-                        (map :id)
-                        (set))
-          link-set (->> links
-                        (map #(select-keys % [:source
-                                              :target
-                                              :label]))
-                        (set))
-          new-links  (->> (for [[e ns] slots
-                                n ns]
-                            (hash-map :source id
-                                      :target n
-                                      :label e
-                                      :strength 0.1))
-                          (remove link-set))
-          new-nodes (->> new-links
-                         (map :target)
+    (letfn []
+      (let [{{{:keys [nodes links]} :data
+              :as                   config} viz-name} db
+            {:keys [id slots]} (get-in db [viz-name :data :nodes i])
+            link-keys [:source :target :label]
+            old-links (->> links
+                           (map #(select-keys % link-keys))
+                           (set))]
+        (letfn [(old-link? [link]
+                  (old-links (select-keys link link-keys)))
+                (update-links []
+                  (let []
+                    (->> (for [[e ns] slots
+                               n ns]
+                           (hash-map :source id
+                                     :target n
+                                     :label e
+                                     :strength 0.1))
+                         (remove old-link?)
+                         (into links))))
+                (update-nodes []
+                  (let [old-node-ids (->> nodes
+                                          (map :id)
+                                          (set))]
+                    (->> slots
+                         (mapcat second)
                          (map #(get-in db [:all-data :mops %]))
-                         (remove node-ids))
-
-          nodes (into nodes new-nodes)
-          links (into links new-links)]
-      (layout/restart config :nodes nodes :links links)
-      (-> db
-          (assoc-in [viz-name :data :nodes] nodes)
-          (assoc-in [viz-name :data :links] links)))))
+                         (remove #(old-node-ids (:id %)))
+                         (into nodes))))]
+          (let [links (update-links)
+                nodes (update-nodes)]
+            (layout/restart config :nodes nodes :links links)
+            (-> db
+                (assoc-in [viz-name :data :nodes] nodes)
+                (assoc-in [viz-name :data :links] links))))))))
 
 (rf/reg-event-db :set-hovered
   (fn [db [_ viz-name i val]]
-    (assoc-in db [viz-name :data :nodes i :hovered ] val)))
+    (assoc-in db [viz-name :data :nodes i :hovered] val)))
 
 

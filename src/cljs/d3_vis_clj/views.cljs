@@ -13,6 +13,27 @@
           (isa? @(rf/subscribe [:hierarchy]) id :B) "blue"
           :default "green")))
 
+(defn node-did-mount
+  [node _]
+  (let [node-elems (-> node
+                       (rid3-> {:r    @(rf/subscribe [:node-size :network])
+                                :fill get-node-color})
+                       (drag/call-drag (rf/subscribe [:force-layout :network]))
+                       (.on "mouseover"
+                            (fn [_ i]
+                              (rf/dispatch [:set-hovered :network i true])))
+                       (.on "mouseout"
+                            (fn [_ i]
+                              (rf/dispatch [:set-hovered :network i false])))
+                       (.on "click"
+                            (fn [_ i]
+                              (println "here")
+                              (rf/dispatch [:expand-node :network i])))
+                       #_(.on "mouseup" (fn [_ i])))]
+
+
+    (rf/dispatch-sync [:set-data :network :node-elems node-elems])))
+
 (defn force-viz [ratom]
   [rid3/viz
    {:id     "force"
@@ -41,20 +62,7 @@
              {:kind            :elem-with-data
               :tag             "circle"
               :class           "node"
-              :did-mount       (fn [node _]
-                                 (let [node-elems (-> node
-                                                      (rid3-> {:r    @(rf/subscribe [:node-size :network])
-                                                               :fill get-node-color})
-                                                      (drag/call-drag (rf/subscribe [:force-layout :network]))
-                                                      (.on "mouseover" (fn [_ i]
-                                                                         (rf/dispatch [:set-hovered :network i true])))
-                                                      (.on "mouseout" (fn [_ i]
-                                                                        (rf/dispatch [:set-hovered :network i false])))
-                                                      (.on "mousedown" (fn [_ i]))
-                                                      (.on "mouseup" (fn [_ i]
-                                                                       (rf/dispatch [:expand-node :network i]))))]
-
-                                   (rf/dispatch-sync [:set-data :network :node-elems node-elems])))
+              :did-mount       node-did-mount
               :prepare-dataset (fn [_]
                                  (-> @(rf/subscribe [:force-layout :network])
                                      (get-in [:data :nodes])
