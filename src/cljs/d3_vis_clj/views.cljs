@@ -34,8 +34,7 @@
 (defn text-did-mount
   [node _]
   (-> node
-      (rid3-> {:x 5
-               :y 0})
+      (rid3-> {:text-anchor "middle"})
       (.text (fn [d] (gobj/get d "name")))))
 
 (defn prepare-data
