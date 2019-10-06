@@ -35,15 +35,20 @@
              (rf/dispatch [:set-hovered :network i false])))
       (.on "click"
            (fn [_ i]
-             (println "here")
              (rf/dispatch [:expand-node :network i])))))
+
+(defn text-did-mount
+  [node]
+  (-> node
+      (rid3-> {:x 5
+               :y 0})
+      (.text (fn [d] (gobj/get d "name")))))
 
 (defn prepare-data
   [viz-name var]
   (-> @(rf/subscribe [:force-layout viz-name])
       (get-in [:data var])
       (clj->js)))
-
 
 (defn force-viz [ratom]
   (let [viz-name :network]
@@ -72,7 +77,16 @@
                                    (rf/dispatch-sync
                                      [:set-data viz-name
                                       :node-elems (node-did-mount node)]))
+                :prepare-dataset (fn [_] (prepare-data viz-name :nodes))}
+               {:kind            :elem-with-data
+                :tag             "text"
+                :class           "texts"
+                :did-mount       (fn [node _]
+                                   (rf/dispatch-sync
+                                     [:set-data viz-name
+                                      :text-elems (text-did-mount node)]))
                 :prepare-dataset (fn [_] (prepare-data viz-name :nodes))}]}]))
+
 
 (defn node-size-text-box []
   [:div
@@ -88,8 +102,8 @@
    [:button {:type     "button"
              :on-click #(rf/dispatch [:add-node :network])}
     "Add Node"]
-   [:input {:type "text"
-            :value @(rf/subscribe [:node-to-add :network])
+   [:input {:type      "text"
+            :value     @(rf/subscribe [:node-to-add :network])
             :on-change #(rf/dispatch [:set-node-to-add :network
                                       (util/text-value %)])}]])
 
