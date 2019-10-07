@@ -6,9 +6,13 @@
   (fn [db]
     (:name db)))
 
-(rf/reg-sub :window-dims
+(rf/reg-sub :window-height
   (fn [db]
-    [(:width db) (:height db)]))
+    (:height db)))
+
+(rf/reg-sub :window-width
+  (fn [db]
+    (:width db)))
 
 (rf/reg-sub :hierarchy
   (fn [db]

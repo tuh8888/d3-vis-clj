@@ -22,3 +22,6 @@
   (reduce (fn [node [on on-fn]]
             (.on node (name on) on-fn))
           node ons))
+
+(def <sub (comp deref re-frame.core/subscribe))
+(def >evt re-frame.core/dispatch)
