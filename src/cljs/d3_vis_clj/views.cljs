@@ -2,6 +2,7 @@
   (:require [re-frame.core :as rf]
             [cljsjs.d3]
             [rid3.core :as rid3 :refer [rid3->]]
+            [re-frame-datatable.core :as dt]
             [d3-vis-clj.util :refer [<sub >evt] :as util]))
 
 (defn link-did-mount
