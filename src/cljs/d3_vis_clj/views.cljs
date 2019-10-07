@@ -117,12 +117,16 @@
 
 (defn mop-table
   [viz-name]
-  [:div
-   "Selected: " (<sub [:selected-mop viz-name])
-   [:table
-    [table-header viz-name]
-    (for [mop (<sub [:visible-mops viz-name])]
-      [table-row viz-name mop])]])
+  [dt/datatable
+   :mops
+   [:visible-mops]
+   [{::dt/column-key   [:id]
+     ::dt/sorting      {::dt/enabled? true}
+     ::dt/column-label "id"}
+    {::dt/column-key   [:name]
+     ::dt/sorting      {::dt/enabled? true}
+     ::dt/column-label "name"}]
+   {::dt/table-classes ["ui" "table"]}])
 
 (defn main-panel []
   [:div
