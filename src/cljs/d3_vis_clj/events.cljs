@@ -112,4 +112,8 @@
   (fn [db [_ viz-name i val]]
     (assoc-in db [viz-name :data :nodes i :hovered] val)))
 
+(rf/reg-event-db :set-selected-mop
+  (fn [db [_ viz-name {:keys [id]}]]
+    (assoc-in db [viz-name :selected] id)))
+
 

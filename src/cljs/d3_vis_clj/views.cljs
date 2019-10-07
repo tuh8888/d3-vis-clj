@@ -94,7 +94,37 @@
    [add-node-btn viz-id]
    [force-viz-graph viz-id]])
 
+(defn table-cell
+  [viz-name mop role]
+  [:td
+   [:button {:type     "button"
+             :on-click #(>evt [:set-selected-mop viz-name mop])
+             :style    {:background-color (<sub [:panel-item-color viz-name mop])}}
+    (:name mop)]])
+
+(defn table-row
+  [viz-name mop]
+  [:tr
+   (for [role (<sub [:visible-roles viz-name])]
+     [table-cell viz-name mop role])])
+
+(defn table-header
+  [viz-name]
+  [:tr
+   (for [role (<sub [:visible-roles viz-name])]
+     [:th role])])
+
+(defn mop-table
+  [viz-name]
+  [:div
+   "Selected: " (<sub [:selected-mop viz-name])
+   [:table
+    [table-header viz-name]
+    (for [mop (<sub [:visible-mops viz-name])]
+      [table-row viz-name mop])]])
+
 (defn main-panel []
   [:div
    [:h1 (<sub [:name])]
-   [force-viz :network]])
+   [mop-table :panel1]
+   #_[force-viz :force-viz1]])

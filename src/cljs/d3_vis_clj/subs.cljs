@@ -76,3 +76,29 @@
     (rf/subscribe [:get-links viz-name]))
   (fn [data _]
     (clj->js data)))
+
+(rf/reg-sub :visible-mops
+  (fn [db [_ viz-name]]
+    (vals (get-in db [:all-data :mops]))))
+
+(rf/reg-sub :selected-mop
+  (fn [db [_ viz-name]]
+    (get-in db [viz-name :selected])))
+
+(rf/reg-sub :mop-id
+  (fn [_ [_ mop]]
+    (:id mop)))
+
+(rf/reg-sub :panel-item-color
+  (fn [[_ viz-name mop] _]
+    (println mop)
+    [(rf/subscribe [:mop-id mop]) (rf/subscribe [:selected-mop viz-name])])
+
+  (fn [[id selected-id] _]
+    (if (= id selected-id)
+      "blue"
+      "red")))
+
+(rf/reg-sub :visible-roles
+  (fn [_ _]
+    ["role1"]))
