@@ -24,7 +24,7 @@
                            (assoc-in [viz-name :height] init-height)
                            (assoc-in [viz-name :width] init-width))}))
 
-(rf/reg-event-fx :initialize-force-layout
+(rf/reg-event-fx :init-force-viz
   (fn [{:keys [db]} [_ viz-name]]
     {:db         (assoc db viz-name db/default-force-layout)
      :dispatch-n (list [:initialize-window-resize viz-name

@@ -8,70 +8,64 @@
   [node viz-id]
   (let [{:keys [stroke-width stroke]} (<sub [:link-config viz-id])]
     (rid3-> node
-            {:stroke-width stroke-width
-             :stroke       stroke})))
+      {:stroke-width stroke-width
+       :stroke       stroke})))
 
 (defn node-or-text-did-mount
   [node viz-id]
   (-> node
       (.call (<sub [:drag-fn viz-id]))
       (util/set-ons
-        :mouseover (fn [_ i] (>evt [:set-hovered viz-id i true]))
-        :mouseout (fn [_ i] (>evt [:set-hovered viz-id i false]))
-        :click (fn [_ i] (>evt [:expand-node viz-id i])))))
+        :mouseover #(>evt [:set-hovered viz-id %2 true])
+        :mouseout #(>evt [:set-hovered viz-id %2 false])
+        :click #(>evt [:expand-node viz-id %2]))))
 
 (defn node-did-mount
   [node viz-id]
   (-> node
       (rid3-> {:r    (<sub [:node-size viz-id])
-               :fill (fn [_ i] (<sub [:node-color viz-id i]))})
+               :fill #(<sub [:node-color viz-id %2])})
       (node-or-text-did-mount viz-id)))
 
 (defn text-did-mount
   [node viz-id]
   (-> node
       (rid3-> {:text-anchor "middle"})
-      (.text (fn [_ i] (<sub [:node-name viz-id i])))
+      (.text #(<sub [:node-name viz-id %2]))
       (node-or-text-did-mount viz-id)))
 
 (defn force-viz-graph [viz-id]
   [rid3/viz
    {:id     (str (name viz-id) "-graph")
     :ratom  (rf/subscribe [:force-layout viz-id])
-    :svg    {:did-mount  (fn [_ _]
-                           (rf/dispatch-sync [:initialize-force-layout
-                                              viz-id]))
+    :svg    {:did-mount  #(rf/dispatch-sync [:init-force-viz viz-id])
 
-             :did-update (fn [node _]
-                           (rid3-> node
-                                   {:width  (<sub [:window-width])
-                                    :height (<sub [:window-height])
-                                    :style  {:background-color "grey"}}))}
+             :did-update #(rid3-> %
+                            {:width  (<sub [:window-width])
+                             :height (<sub [:window-height])
+                             :style  {:background-color "grey"}})}
 
     :pieces [{:kind            :elem-with-data
               :tag             "line"
               :class           "link"
-              :did-mount       (fn [node _]
-                                 (rf/dispatch-sync
-                                   [:set-link-elems viz-id
-                                    (link-did-mount node viz-id)]))
-              :prepare-dataset (fn [_] (<sub [:get-links-js viz-id]))}
+              :did-mount       #(rf/dispatch-sync
+                                  [:set-link-elems viz-id
+                                   (link-did-mount % viz-id)])
+              :prepare-dataset #(<sub [:get-links-js viz-id])}
              {:kind            :elem-with-data
               :tag             "circle"
               :class           "node"
-              :did-mount       (fn [node _]
-                                 (rf/dispatch-sync
-                                   [:set-node-elems viz-id
-                                    (node-did-mount node viz-id)]))
-              :prepare-dataset (fn [_] (<sub [:get-nodes-js viz-id]))}
+              :did-mount       #(rf/dispatch-sync
+                                  [:set-node-elems viz-id
+                                   (node-did-mount % viz-id)])
+              :prepare-dataset #(<sub [:get-nodes-js viz-id])}
              {:kind            :elem-with-data
               :tag             "text"
               :class           "texts"
-              :did-mount       (fn [node _]
-                                 (rf/dispatch-sync
-                                   [:set-text-elems viz-id
-                                    (text-did-mount node viz-id)]))
-              :prepare-dataset (fn [_] (<sub [:get-nodes-js viz-id]))}]}])
+              :did-mount       #(rf/dispatch-sync
+                                  [:set-text-elems viz-id
+                                   (text-did-mount % viz-id)])
+              :prepare-dataset #(<sub [:get-nodes-js viz-id])}]}])
 
 (defn node-size-text-box
   [viz-id]
