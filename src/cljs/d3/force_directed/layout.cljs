@@ -81,9 +81,9 @@
            (fn []
              (doto sim
                (set-forces! @ratom :reset? true)
-               (update-node-elems (get-in @ratom [:data :node-elems]))
-               (update-node-elems (get-in @ratom [:data :text-elems]))
-               (update-link-elems (get-in @ratom [:data :link-elems])))))
+               (update-node-elems (get-in @ratom [:elems :node]))
+               (update-node-elems (get-in @ratom [:elems :text]))
+               (update-link-elems (get-in @ratom [:elems :link])))))
       (util/set-alpha-target! 0.3)
       (.restart)))
 

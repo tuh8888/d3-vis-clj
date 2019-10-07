@@ -29,11 +29,19 @@
     {:db         (assoc db viz-name db/default-force-layout)
      :dispatch-n (list [:initialize-window-resize viz-name
                         js/window.innerWidth js/window.innerHeight]
-                       [:initialize-sim :network])}))
+                       [:initialize-sim viz-name])}))
 
-(rf/reg-event-db :set-data
-  (fn [db [_ viz-name k v]]
-    (assoc-in db [viz-name :data k] v)))
+(rf/reg-event-db :set-node-elems
+  (fn [db [_ viz-name elems]]
+    (assoc-in db [viz-name :elems :node] elems)))
+
+(rf/reg-event-db :set-link-elems
+  (fn [db [_ viz-name elems]]
+    (assoc-in db [viz-name :elems :link] elems)))
+
+(rf/reg-event-db :set-text-elems
+  (fn [db [_ viz-name elems]]
+    (assoc-in db [viz-name :elems :text] elems)))
 
 (rf/reg-event-db :resize-nodes
   (fn [db [_ viz-name size]]

@@ -2,55 +2,48 @@
   (:require [re-frame.core :as rf]
             [cljsjs.d3]
             [rid3.core :as rid3 :refer [rid3->]]
-            [goog.object :as gobj]
             [d3-vis-clj.util :as util]))
 
-(def <sub (comp deref re-frame.core/subscribe))             ;; aka listen (above)
+(def <sub (comp deref re-frame.core/subscribe))
 (def >evt re-frame.core/dispatch)
 
 (defn link-did-mount
   [node viz-name]
-  (let [{:keys [stroke-width stroke]} @(rf/subscribe [:link-config viz-name])]
+  (let [{:keys [stroke-width stroke]} (<sub [:link-config viz-name])]
     (rid3-> node
             {:stroke-width stroke-width
              :stroke       stroke})))
 
-(defn node-color
-  [{:keys [id hovered]}]
-  (cond hovered "yellow"
-        (isa? @(rf/subscribe [:hierarchy]) id :A) "red"
-        (isa? @(rf/subscribe [:hierarchy]) id :B) "blue"
-        :default "green"))
-
-(defn node-did-mount
-  [node viz-name ratom]
+(defn node-or-text-did-mount
+  [node viz-name]
   (-> node
-      (rid3-> {:r    (get-in @ratom [:node-config :r])
-               :fill (fn [_ i] (node-color (get-in @ratom [:data :nodes i])))})
-      (.call (or (:drag @ratom) #()))
+      (.call (<sub [:drag-fn viz-name]))
       (util/set-ons
         :mouseover (fn [_ i] (>evt [:set-hovered viz-name i true]))
         :mouseout (fn [_ i] (>evt [:set-hovered viz-name i false]))
         :click (fn [_ i] (>evt [:expand-node viz-name i])))))
 
+(defn node-did-mount
+  [node viz-name]
+  (-> node
+      (rid3-> {:r    (<sub [:node-size viz-name])
+               :fill (fn [_ i] (<sub [:node-color viz-name i]))})
+      (node-or-text-did-mount viz-name)))
+
 (defn text-did-mount
-  [node _]
+  [node viz-name]
   (-> node
       (rid3-> {:text-anchor "middle"})
-      (.text (fn [d] (gobj/get d "name")))))
-
-(defn prepare-data
-  [viz-name var]
-  (-> (<sub [:force-layout viz-name])
-      (get-in [:data var])
-      (clj->js)))
+      (.text (fn [_ i] (<sub [:node-name viz-name i])))
+      (node-or-text-did-mount viz-name)))
 
 (defn force-viz [viz-name ratom]
   [rid3/viz
    {:id     (name viz-name)
     :ratom  ratom
     :svg    {:did-mount  (fn [_ v]
-                           (rf/dispatch-sync [:initialize-force-layout viz-name]))
+                           (rf/dispatch-sync [:initialize-force-layout
+                                              viz-name]))
 
 
              :did-update (fn [node ratom]
@@ -65,45 +58,44 @@
               :class           "link"
               :did-mount       (fn [node _]
                                  (rf/dispatch-sync
-                                   [:set-data viz-name
-                                    :link-elems (link-did-mount node viz-name)]))
-              :prepare-dataset (fn [_] (prepare-data viz-name :links))}
+                                   [:set-link-elems viz-name
+                                    (link-did-mount node viz-name)]))
+              :prepare-dataset (fn [_] (<sub [:get-links-js viz-name]))}
              {:kind            :elem-with-data
               :tag             "circle"
               :class           "node"
-              :did-mount       (fn [node ratom]
+              :did-mount       (fn [node _]
                                  (rf/dispatch-sync
-                                   [:set-data viz-name
-                                    :node-elems (node-did-mount node viz-name ratom)]))
-              :prepare-dataset (fn [_] (prepare-data viz-name :nodes))}
+                                   [:set-node-elems viz-name
+                                    (node-did-mount node viz-name)]))
+              :prepare-dataset (fn [_] (<sub [:get-nodes-js viz-name]))}
              {:kind            :elem-with-data
               :tag             "text"
               :class           "texts"
               :did-mount       (fn [node _]
                                  (rf/dispatch-sync
-                                   [:set-data viz-name
-                                    :text-elems (text-did-mount node viz-name)]))
-              :prepare-dataset (fn [_] (prepare-data viz-name :nodes))}]}])
-
+                                   [:set-text-elems viz-name
+                                    (text-did-mount node viz-name)]))
+              :prepare-dataset (fn [_] (<sub [:get-nodes-js viz-name]))}]}])
 
 (defn node-size-text-box []
   [:div
    "Node size: "
    [:input {:type      "text"
-            :value     @(rf/subscribe [:node-size :network])
-            :on-change #(rf/dispatch [:resize-nodes :network
-                                      (util/text-value %)])}]])
+            :value     (<sub [:node-size :network])
+            :on-change #(>evt [:resize-nodes :network
+                               (util/text-value %)])}]])
 
 (defn add-node-btn
   []
   [:div
    [:button {:type     "button"
-             :on-click #(rf/dispatch [:add-node :network])}
+             :on-click #(>evt [:add-node :network])}
     "Add Node"]
    [:input {:type      "text"
-            :value     @(rf/subscribe [:node-to-add :network])
-            :on-change #(rf/dispatch [:set-node-to-add :network
-                                      (util/text-value %)])}]])
+            :value     (<sub [:node-to-add :network])
+            :on-change #(>evt [:set-node-to-add :network
+                               (util/text-value %)])}]])
 
 (defn main-panel []
   [:div
