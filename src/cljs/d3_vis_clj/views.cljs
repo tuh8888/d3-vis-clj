@@ -2,8 +2,8 @@
   (:require [re-frame.core :as rf]
             [cljsjs.d3]
             [rid3.core :as rid3 :refer [rid3->]]
-            [re-frame-datatable.core :as dt]
-            [d3-vis-clj.util :refer [<sub >evt] :as util]))
+            [d3-vis-clj.util :refer [<sub >evt] :as util]
+            [clojure.string :as str]))
 
 (defn link-did-mount
   [node viz-id]
@@ -95,38 +95,44 @@
    [add-node-btn viz-id]
    [force-viz-graph viz-id]])
 
-(defn table-cell
-  [viz-name mop role]
-  [:td
-   [:button {:type     "button"
-             :on-click #(>evt [:set-selected-mop viz-name mop])
-             :style    {:background-color (<sub [:panel-item-color viz-name mop])}}
-    (:name mop)]])
-
-(defn table-row
-  [viz-name mop]
+(defn role-aggregation-row
+  [viz-id]
   [:tr
-   (for [role (<sub [:visible-roles viz-name])]
-     [table-cell viz-name mop role])])
+   [:th {:col-span 3} ""]
+   [:th {:col-span (count (<sub [:visible-roles viz-id]))} "Roles"]])
 
-(defn table-header
-  [viz-name]
-  [:tr
-   (for [role (<sub [:visible-roles viz-name])]
-     [:th role])])
+(defn css-class-str [classes]
+  {:class (->> classes
+               (filter (complement nil?))
+               (clojure.string/join \space))})
 
 (defn mop-table
-  [viz-name]
-  [dt/datatable
-   :mops
-   [:visible-mops]
-   [{::dt/column-key   [:id]
-     ::dt/sorting      {::dt/enabled? true}
-     ::dt/column-label "id"}
-    {::dt/column-key   [:name]
-     ::dt/sorting      {::dt/enabled? true}
-     ::dt/column-label "name"}]
-   {::dt/table-classes ["ui" "table"]}])
+  [viz-id]
+  (rf/dispatch-sync [:init-mop-table viz-id])
+  (fn []
+    (let [col-defs [{:col-key [:id]}
+                    {:col-key [:name]}]]
+      [:table.ui.table
+       [:thead
+        [:tr
+         (for [{:keys [col-key]} col-defs]
+           ^{:key (str col-key)}
+           [:th
+            {:on-click #(>evt [:set-sort-key viz-id col-key
+                               (<sub [:rev? viz-id col-key])])}
+            (last col-key)])]]
+
+       [:tbody
+        (for [{:keys [id] :as item} (<sub [:visible-mops viz-id])]
+          ^{:key id}
+          [:tr
+           (for [{:keys [col-key render-fn]} col-defs]
+             (let [val (get-in item col-key)]
+               ^{:key (str id "-" col-key)}
+               [:td
+                (if render-fn
+                  (render-fn val)
+                  val)]))])]])))
 
 (defn main-panel []
   [:div

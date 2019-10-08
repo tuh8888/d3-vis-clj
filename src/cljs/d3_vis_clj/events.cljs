@@ -8,63 +8,63 @@
     db/default-db))
 
 (rf/reg-event-db :window-resized
-  (fn [db [_ viz-name new-width new-height]]
+  (fn [db [_ viz-id new-width new-height]]
     (-> db
         (assoc-in [:height] new-height)
         (assoc-in [:width] new-width)
-        (assoc-in [viz-name :height] new-height)
-        (assoc-in [viz-name :width] new-width))))
+        (assoc-in [viz-id :height] new-height)
+        (assoc-in [viz-id :width] new-width))))
 
 (rf/reg-event-fx :initialize-window-resize
-  (fn [{:keys [db]} [_ viz-name init-width init-height]]
-    {:window/on-resize {:dispatch [:window-resized viz-name]}
+  (fn [{:keys [db]} [_ viz-id init-width init-height]]
+    {:window/on-resize {:dispatch [:window-resized viz-id]}
      :db               (-> db
                            (assoc-in [:height] init-height)
                            (assoc-in [:width] init-width)
-                           (assoc-in [viz-name :height] init-height)
-                           (assoc-in [viz-name :width] init-width))}))
+                           (assoc-in [viz-id :height] init-height)
+                           (assoc-in [viz-id :width] init-width))}))
 
 (rf/reg-event-fx :init-force-viz
-  (fn [{:keys [db]} [_ viz-name]]
-    {:db         (assoc db viz-name db/default-force-layout)
-     :dispatch-n (list [:initialize-window-resize viz-name
+  (fn [{:keys [db]} [_ viz-id]]
+    {:db         (assoc db viz-id db/default-force-layout)
+     :dispatch-n (list [:initialize-window-resize viz-id
                         js/window.innerWidth js/window.innerHeight]
-                       [:initialize-sim viz-name])}))
+                       [:initialize-sim viz-id])}))
 
 (rf/reg-event-db :set-node-elems
-  (fn [db [_ viz-name elems]]
-    (assoc-in db [viz-name :elems :node] elems)))
+  (fn [db [_ viz-id elems]]
+    (assoc-in db [viz-id :elems :node] elems)))
 
 (rf/reg-event-db :set-link-elems
-  (fn [db [_ viz-name elems]]
-    (assoc-in db [viz-name :elems :link] elems)))
+  (fn [db [_ viz-id elems]]
+    (assoc-in db [viz-id :elems :link] elems)))
 
 (rf/reg-event-db :set-text-elems
-  (fn [db [_ viz-name elems]]
-    (assoc-in db [viz-name :elems :text] elems)))
+  (fn [db [_ viz-id elems]]
+    (assoc-in db [viz-id :elems :text] elems)))
 
 (rf/reg-event-db :resize-nodes
-  (fn [db [_ viz-name size]]
-    (assoc-in db [viz-name :node-config :r] size)))
+  (fn [db [_ viz-id size]]
+    (assoc-in db [viz-id :node-config :r] size)))
 
 (rf/reg-event-db :initialize-sim
-  (fn [db [_ viz-name]]
-    (update db viz-name merge
-            (layout/new-sim (rf/subscribe [:force-layout viz-name])))))
+  (fn [db [_ viz-id]]
+    (update db viz-id merge
+            (layout/new-sim (rf/subscribe [:force-layout viz-id])))))
 
 (rf/reg-event-db :set-node-to-add
-  (fn [db [_ viz-name node-id]]
-    (assoc-in db [viz-name :node-to-add] (keyword node-id))))
+  (fn [db [_ viz-id node-id]]
+    (assoc-in db [viz-id :node-to-add] (keyword node-id))))
 
 (rf/reg-event-fx :add-node
-  (fn [{:keys [db]} [_ viz-name]]
-    (let [node-id  (get-in db [viz-name :node-to-add])
+  (fn [{:keys [db]} [_ viz-id]]
+    (let [node-id  (get-in db [viz-id :node-to-add])
           new-node (get-in db [:all-data :mops node-id])]
       (when new-node
-        (let [{{{:keys [nodes]} :data :as config} viz-name} db
+        (let [{{{:keys [nodes]} :data :as config} viz-id} db
               nodes (conj nodes new-node)]
           {:restart-sim [config nodes]
-           :db          (assoc-in db [viz-name :data :nodes] nodes)})))))
+           :db          (assoc-in db [viz-id :data :nodes] nodes)})))))
 
 (defn slots->links
   [id slots]
@@ -77,9 +77,9 @@
 
 
 (rf/reg-event-fx :expand-node
-  (fn [{:keys [db]} [_ viz-name i]]
+  (fn [{:keys [db]} [_ viz-id i]]
     (let [{{{:keys [links nodes]} :data
-            :as                   config} viz-name} db
+            :as                   config} viz-id} db
           {{:keys [id slots]} i} nodes
           link-keys    [:source :target :label]
           old-links    (->> links
@@ -100,8 +100,8 @@
                             (into nodes))]
 
       {:db          (-> db
-                        (assoc-in [viz-name :data :nodes] nodes)
-                        (assoc-in [viz-name :data :links] links))
+                        (assoc-in [viz-id :data :nodes] nodes)
+                        (assoc-in [viz-id :data :links] links))
        :restart-sim [config nodes links]})))
 
 (rf/reg-fx :restart-sim
@@ -109,11 +109,26 @@
     (layout/restart config :nodes nodes :links links)))
 
 (rf/reg-event-db :set-hovered
-  (fn [db [_ viz-name i val]]
-    (assoc-in db [viz-name :data :nodes i :hovered] val)))
+  (fn [db [_ viz-id i val]]
+    (assoc-in db [viz-id :data :nodes i :hovered] val)))
 
 (rf/reg-event-db :set-selected-mop
-  (fn [db [_ viz-name {:keys [id]}]]
-    (assoc-in db [viz-name :selected] id)))
+  (fn [db [_ viz-id {:keys [id]}]]
+    (assoc-in db [viz-id :selected] id)))
+
+(rf/reg-event-db :set-sort-key
+  (fn [db [_ viz-id col-key rev?]]
+    (-> db
+        (assoc-in [viz-id :reversed-col] (when-not rev? col-key))
+        (update-in [viz-id :data]
+                   (fn [data]
+                     (let [data (sort-by #(get-in % col-key) data)]
+                       (if rev?
+                         data
+                         (reverse data))))))))
+
+(rf/reg-event-db :init-mop-table
+  (fn [db [_ viz-id]]
+    (assoc-in db [viz-id :data] (vals (get-in db [:all-data :mops])))))
 
 

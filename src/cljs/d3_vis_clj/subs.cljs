@@ -19,28 +19,28 @@
     (get-in db [:all-data :hierarchy])))
 
 (rf/reg-sub :force-layout
-  (fn [db [_ viz-name]]
-    (get db viz-name)))
+  (fn [db [_ viz-id]]
+    (get db viz-id)))
 
 (rf/reg-sub :node-size
-  (fn [db [_ viz-name]]
-    (get-in db [viz-name :node-config :r])))
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :node-config :r])))
 
 (rf/reg-sub :node-to-add
-  (fn [db [_ viz-name]]
-    (get-in db [viz-name :node-to-add])))
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :node-to-add])))
 
 (rf/reg-sub :link-config
-  (fn [db [_ viz-name]]
-    (get-in db [viz-name :link-config])))
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :link-config])))
 
 (rf/reg-sub :get-node
-  (fn [db [_ viz-name i]]
-    (get-in db [viz-name :data :nodes i])))
+  (fn [db [_ viz-id i]]
+    (get-in db [viz-id :data :nodes i])))
 
 (rf/reg-sub :node-color
-  (fn [[_ viz-name i] _]
-    (rf/subscribe [:get-node viz-name i]))
+  (fn [[_ viz-id i] _]
+    (rf/subscribe [:get-node viz-id i]))
   (fn [{:keys [id hovered]} _]
     (cond hovered "yellow"
           (isa? @(rf/subscribe [:hierarchy]) id :A) "red"
@@ -48,51 +48,51 @@
           :default "green")))
 
 (rf/reg-sub :node-name
-  (fn [[_ viz-name i] _]
-    (rf/subscribe [:get-node viz-name i]))
+  (fn [[_ viz-id i] _]
+    (rf/subscribe [:get-node viz-id i]))
   (fn [{:keys [name]} _]
     name))
 
 (rf/reg-sub :drag-fn
-  (fn [db [_ viz-name]]
-    (get-in db [viz-name :drag] #())))
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :drag] #())))
 
 (rf/reg-sub :get-nodes
-  (fn [db [_ viz-name]]
-    (get-in db [viz-name :data :nodes])))
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :data :nodes])))
 
 (rf/reg-sub :get-nodes-js
-  (fn [[_ viz-name] _]
-    (rf/subscribe [:get-nodes viz-name]))
+  (fn [[_ viz-id] _]
+    (rf/subscribe [:get-nodes viz-id]))
   (fn [data _]
     (clj->js data)))
 
 (rf/reg-sub :get-links
-  (fn [db [_ viz-name]]
-    (get-in db [viz-name :data :links])))
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :data :links])))
 
 (rf/reg-sub :get-links-js
-  (fn [[_ viz-name] _]
-    (rf/subscribe [:get-links viz-name]))
+  (fn [[_ viz-id] _]
+    (rf/subscribe [:get-links viz-id]))
   (fn [data _]
     (clj->js data)))
 
 (rf/reg-sub :visible-mops
-  (fn [db [_ viz-name]]
-    (vals (get-in db [:all-data :mops]))))
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :data])))
 
 (rf/reg-sub :selected-mop
-  (fn [db [_ viz-name]]
-    (get-in db [viz-name :selected])))
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :selected])))
 
 (rf/reg-sub :mop-id
   (fn [_ [_ mop]]
     (:id mop)))
 
 (rf/reg-sub :panel-item-color
-  (fn [[_ viz-name mop] _]
+  (fn [[_ viz-id mop] _]
     (println mop)
-    [(rf/subscribe [:mop-id mop]) (rf/subscribe [:selected-mop viz-name])])
+    [(rf/subscribe [:mop-id mop]) (rf/subscribe [:selected-mop viz-id])])
 
   (fn [[id selected-id] _]
     (if (= id selected-id)
@@ -101,4 +101,8 @@
 
 (rf/reg-sub :visible-roles
   (fn [_ _]
-    ["role1"]))
+    [:r1]))
+
+(rf/reg-sub :rev?
+  (fn [db [_ viz-id col-key]]
+    (= col-key (get-in db [viz-id :reversed-col]))))

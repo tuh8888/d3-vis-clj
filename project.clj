@@ -22,8 +22,7 @@
                  ;; My deps
                  [cljsjs/d3 "5.12.0-0"]
                  [rid3 "0.2.1"]
-                 [district0x/re-frame-window-fx "1.0.2"]
-                 [re-frame-datatable "0.6.0"]]
+                 [district0x/re-frame-window-fx "1.0.2"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-environ "1.1.0"]]
