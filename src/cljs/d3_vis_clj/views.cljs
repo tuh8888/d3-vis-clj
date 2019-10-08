@@ -5,6 +5,7 @@
             [d3.force-directed.views :as force-views]
             [d3.force-directed.subs-evts :as fses]
             [data-table.views :as dt-views]
+            [d3.force-directed.interaction :as force-interaction]
             [clojure.string :as str]))
 
 (defn node-size-text-box
@@ -57,8 +58,10 @@
    [:div
     {:style {:flex-grow "1"}}
     [force-views/force-viz-graph viz-id
-     {:svg-opts  {:width  0.9
-                  :height 0.4}
+     {:svg-opts  {:width   0.9
+                  :height  0.4
+                  :zoom-fn force-interaction/zoom
+                  :drag-fn force-interaction/drag}
       :node-opts {:ons       {:click #(if js/d3.event.ctrlKey
                                         (>evt [::fses/expand-node viz-id %2])
                                         (>evt [::fses/toggle-selected-node viz-id %2]))}

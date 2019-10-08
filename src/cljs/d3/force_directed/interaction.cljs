@@ -1,6 +1,8 @@
-(ns d3.force-directed.drag
+(ns d3.force-directed.interaction
   (:require [d3.force-directed.util :as util]
-            [d3-vis-clj.util :as d3-util]))
+            [d3-vis-clj.util :as d3-util]
+            [cljsjs.d3]
+            [rid3.core :refer [rid3->]]))
 
 (defn ^:private constrain-x!
   [d x]
@@ -40,3 +42,13 @@
                      {:start started
                       :drag  dragged
                       :end   ended})))
+
+(defn zoom
+  [g]
+  (-> (js/d3.zoom)
+      (.scaleExtent (clj->js [0.1 7]))
+      (d3-util/set-ons
+        {:zoom (fn []
+                 (let [transform js/d3.event.transform]
+                   (rid3-> g
+                     {:transform transform})))})))

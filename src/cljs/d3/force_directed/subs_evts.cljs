@@ -13,7 +13,7 @@
                      (assoc viz-id db/default-force-layout)
                      (assoc-in [viz-id :svg] node))
      :dispatch-n (list [::initialize-viz-resize viz-id opts]
-                       [::initialize-sim viz-id])}))
+                       [::initialize-sim viz-id opts])}))
 
 (reg-event-fx ::initialize-viz-resize
   [trim-v]
@@ -69,9 +69,10 @@
 
 (reg-event-db ::initialize-sim
   [trim-v]
-  (fn [db [viz-id]]
+  (fn [db [viz-id opts]]
     (update db viz-id merge
-            (layout/new-sim (rf/subscribe [:common.subs/viz viz-id])))))
+            (layout/new-sim (rf/subscribe [:common.subs/viz viz-id])
+                            opts))))
 
 (reg-event-db ::set-node-to-add
   [util/viz-id-path trim-v]

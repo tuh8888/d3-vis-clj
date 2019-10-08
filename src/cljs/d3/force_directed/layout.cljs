@@ -3,7 +3,7 @@
             [cljsjs.d3]
             [rid3.core :refer [rid3->]]
             [d3.force-directed.util :as util]
-            [d3.force-directed.drag :as drag]))
+            [d3.force-directed.interaction :as force-interaction]))
 
 (defn ^:private set-links!
   [sim new-links]
@@ -120,10 +120,11 @@
 
 (defn new-sim
   "Creates and starts a new simulation."
-  [ratom]
+  [ratom {:keys [drag-fn]
+          :or   {drag-fn force-interaction/drag}}]
   (let [sim (doto (js/d3.forceSimulation)
               (set-forces! @ratom)
               (-restart ratom))]
     {:sim     sim
      :restart (partial -restart sim ratom)
-     :drag    (drag/drag ratom)}))
+     :drag    (drag-fn ratom)}))

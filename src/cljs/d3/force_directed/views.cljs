@@ -3,7 +3,7 @@
             [rid3.core :as rid3 :refer [rid3->]]
             [d3-vis-clj.util :as util :refer [<sub >evt]]
             [d3.force-directed.subs-evts :as ses]
-            [d3.force-directed.zoom :as zoom]))
+            [d3.force-directed.interaction :as force-interaction]))
 
 (defn link-did-mount
   [node viz-id _]
@@ -43,12 +43,15 @@
       (rid3-> {:text-anchor "middle"})
       (.text label-fn)))
 
-(defn force-viz-graph [viz-id {:keys [svg-opts node-opts link-opts]}]
+(defn force-viz-graph [viz-id {:keys                                    [svg-opts node-opts link-opts]
+                               {:keys [zoom-fn]
+                                :or   {zoom-fn force-interaction/zoom}} :svg-opts}]
   [rid3/viz
    {:id             (str (name viz-id) "-graph")
     :ratom          (rf/subscribe [:common.subs/viz viz-id])
     :svg            {:did-mount  (fn [node _]
-                                   (rf/dispatch-sync [::ses/init-force-viz viz-id node svg-opts]))
+                                   (rf/dispatch-sync [::ses/init-force-viz viz-id
+                                                      node svg-opts]))
 
                      :did-update (fn [node _]
                                    (rid3-> node
@@ -58,7 +61,7 @@
 
     :main-container {:did-mount  (fn [node _]
                                    (.call (<sub [::ses/svg viz-id])
-                                          (zoom/zoom node)))
+                                          (zoom-fn node)))
                      :did-update #()}
 
     :pieces         [{:kind            :elem-with-data
