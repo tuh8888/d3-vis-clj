@@ -2,12 +2,11 @@
   (:require [re-frame.core :as rf]
             [rid3.core :as rid3 :refer [rid3->]]
             [d3-vis-clj.util :as util :refer [<sub >evt]]
-            [d3.force-directed.subs :as subs]
-            [d3.force-directed.events :as evts]))
+            [d3.force-directed.subs-evts :as ses]))
 
 (defn link-did-mount
   [node viz-id _]
-  (let [{:keys [stroke-width stroke]} (<sub [::subs/link-config viz-id])]
+  (let [{:keys [stroke-width stroke]} (<sub [::ses/link-config viz-id])]
     (rid3-> node
       {:stroke-width stroke-width
        :stroke       stroke})))
@@ -15,16 +14,16 @@
 (defn node-or-text-did-mount
   [node viz-id {:keys [ons]}]
   (-> node
-      (.call (<sub [::subs/drag-fn viz-id]))
+      (.call (<sub [::ses/drag-fn viz-id]))
       (util/set-ons
-        (merge {:mouseover #(>evt [::evts/set-hovered viz-id %2 true])
-                :mouseout  #(>evt [::evts/set-hovered viz-id %2 false])}
+        (merge {:mouseover #(>evt [::ses/set-hovered viz-id %2 true])
+                :mouseout  #(>evt [::ses/set-hovered viz-id %2 false])}
                ons))))
 
 (defn node-did-mount
   [node viz-id {:keys [fill-fn stroke-fn] :as node-opts}]
   (-> node
-      (rid3-> {:r      (<sub [::subs/node-size viz-id])
+      (rid3-> {:r      (<sub [::ses/node-size viz-id])
                :fill   fill-fn
                :stroke stroke-fn})
       (node-or-text-did-mount viz-id node-opts)))
@@ -48,37 +47,37 @@
   [rid3/viz
    {:id     (str (name viz-id) "-graph")
     :ratom  (rf/subscribe [:common.subs/viz viz-id])
-    :svg    {:did-mount  #(rf/dispatch-sync [::evts/init-force-viz viz-id])
+    :svg    {:did-mount  #(rf/dispatch-sync [::ses/init-force-viz viz-id])
              :did-update #(rid3-> %
-                            {:width  (<sub [::evts/width viz-id])
-                             :height (<sub [::evts/height viz-id])
+                            {:width  (<sub [::ses/width viz-id])
+                             :height (<sub [::ses/height viz-id])
                              :style  {:background-color "grey"}})}
 
     :pieces [{:kind            :elem-with-data
               :tag             "line"
               :class           "link"
               :did-mount       #(rf/dispatch-sync
-                                  [::evts/set-link-elems viz-id
+                                  [::ses/set-link-elems viz-id
                                    (link-did-mount % viz-id link-opts)])
-              :prepare-dataset #(<sub [::subs/get-links-js viz-id])}
+              :prepare-dataset #(<sub [::ses/get-links-js viz-id])}
              {:kind            :elem-with-data
               :tag             "text"
               :class           "link-text"
               :did-mount       #(rf/dispatch-sync
-                                  [::evts/set-link-text-elems viz-id
+                                  [::ses/set-link-text-elems viz-id
                                    (link-text-did-mount % viz-id link-opts)])
-              :prepare-dataset #(<sub [::subs/get-links-js viz-id])}
+              :prepare-dataset #(<sub [::ses/get-links-js viz-id])}
              {:kind            :elem-with-data
               :tag             "circle"
               :class           "node"
               :did-mount       #(rf/dispatch-sync
-                                  [::evts/set-node-elems viz-id
+                                  [::ses/set-node-elems viz-id
                                    (node-did-mount % viz-id node-opts)])
-              :prepare-dataset #(<sub [::subs/get-nodes-js viz-id])}
+              :prepare-dataset #(<sub [::ses/get-nodes-js viz-id])}
              {:kind            :elem-with-data
               :tag             "text"
               :class           "texts"
               :did-mount       #(rf/dispatch-sync
-                                  [::evts/set-text-elems viz-id
+                                  [::ses/set-text-elems viz-id
                                    (text-did-mount % viz-id node-opts)])
-              :prepare-dataset #(<sub [::subs/get-nodes-js viz-id])}]}])
+              :prepare-dataset #(<sub [::ses/get-nodes-js viz-id])}]}])

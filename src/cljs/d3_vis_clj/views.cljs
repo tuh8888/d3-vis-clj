@@ -3,8 +3,7 @@
             [d3-vis-clj.util :refer [<sub >evt] :as util]
             [common.subs :as c-subs]
             [d3.force-directed.views :as force-views]
-            [d3.force-directed.subs :as force-subs]
-            [d3.force-directed.events :as force-evts]
+            [d3.force-directed.subs-evts :as fses]
             [data-table.views :as dt-views]
             [clojure.string :as str]))
 
@@ -13,8 +12,8 @@
   [:div
    "Node size: "
    [:input {:type      "text"
-            :value     (<sub [::force-subs/node-size viz-id])
-            :on-change #(>evt [::force-evts/resize-nodes viz-id
+            :value     (<sub [::fses/node-size viz-id])
+            :on-change #(>evt [::fses/resize-nodes viz-id
                                (util/text-value %)])}]])
 
 (defn node-labels-check-box
@@ -39,11 +38,11 @@
   [viz-id]
   [:div
    [:button {:type     "button"
-             :on-click #(>evt [::force-evts/add-node viz-id])}
+             :on-click #(>evt [::fses/add-node viz-id])}
     "Add Node"]
    [:input {:type      "text"
-            :value     (<sub [::force-subs/node-to-add viz-id])
-            :on-change #(>evt [::force-evts/set-node-to-add viz-id
+            :value     (<sub [::fses/node-to-add viz-id])
+            :on-change #(>evt [::fses/set-node-to-add viz-id
                                (util/text-value %)])}]])
 (defn force-viz
   [viz-id]
@@ -61,8 +60,8 @@
      {:svg-opts  {:width  0.9
                   :height 0.5}
       :node-opts {:ons       {:click #(if js/d3.event.ctrlKey
-                                        (>evt [::force-evts/expand-node viz-id %2])
-                                        (>evt [::force-evts/toggle-selected-node viz-id %2]))}
+                                        (>evt [::fses/expand-node viz-id %2])
+                                        (>evt [::fses/toggle-selected-node viz-id %2]))}
                   :fill-fn   #(<sub [:node-color viz-id %2])
                   :stroke-fn #(<sub [:node-stroke viz-id %2])
                   :label-fn  #(<sub [:node-label viz-id %2])}
@@ -160,5 +159,5 @@
   [:div
    [:h1 (<sub [:name])]
    [:div
-    [mop-table :panel1]
+    #_[mop-table :panel1]
     [force-viz :force-viz1]]])

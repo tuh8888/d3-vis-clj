@@ -3,7 +3,7 @@
   (:require [re-frame.core :as rf :refer [subscribe reg-sub
                                           reg-event-db reg-event-fx
                                           trim-v]]
-            [d3.force-directed.subs :as force-subs]
+            [d3.force-directed.subs-evts :as fses]
             [d3-vis-clj.db :as db]
             [clojure.set :as set]
             [d3-vis-clj.util :as util]))
@@ -145,7 +145,7 @@
 (reg-sub :node-label
   (fn [[_ viz-id i] _]
     [(subscribe [:node-labels? viz-id])
-     (subscribe [::force-subs/node viz-id i])])
+     (subscribe [::fses/node viz-id i])])
   (fn [[show-labels node] _]
     (when (or (:selected node)
               (:hovered node)
@@ -163,7 +163,7 @@
 (reg-sub :link-label
   (fn [[_ viz-id i] _]
     [(subscribe [:link-labels? viz-id])
-     (subscribe [::force-subs/link viz-id i])])
+     (subscribe [::fses/link viz-id i])])
   (fn [[show-labels link] _]
     (when show-labels
       (:label link))))
@@ -182,7 +182,7 @@
 
 (reg-sub :node-color
   (fn [[_ viz-id i] _]
-    [(subscribe [:hierarchy]) (subscribe [::force-subs/node viz-id i])])
+    [(subscribe [:hierarchy]) (subscribe [::fses/node viz-id i])])
   (fn [[h {:keys [id hovered]}] _]
     (cond hovered "yellow"
           (isa? h id :A) "cyan"
@@ -191,7 +191,7 @@
 
 (reg-sub :node-stroke
   (fn [[_ viz-id i]]
-    (subscribe [::force-subs/node viz-id i]))
+    (subscribe [::fses/node viz-id i]))
   (fn [node _]
     (if (:selected node)
       "red"

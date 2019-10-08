@@ -1,6 +1,6 @@
-(ns d3.force-directed.events
+(ns d3.force-directed.subs-evts
   (:require [re-frame.core :as rf :refer [reg-event-db reg-event-fx reg-fx
-                                          reg-sub
+                                          reg-sub subscribe
                                           trim-v]]
             [d3-vis-clj.db :as db]
             [d3.force-directed.layout :as layout]
@@ -135,3 +135,47 @@
   [util/viz-id-path trim-v]
   (fn [db [i]]
     (update-in db [:data :nodes i :selected] not)))
+
+(reg-sub ::node-size
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :node-config :r])))
+
+(reg-sub ::node-to-add
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :node-to-add])))
+
+(reg-sub ::link-config
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :link-config])))
+
+(reg-sub ::node
+  (fn [db [_ viz-id i]]
+    (get-in db [viz-id :data :nodes i])))
+
+(reg-sub ::link
+  (fn [db [_ viz-id i]]
+    (get-in db [viz-id :data :links i])))
+
+(reg-sub ::drag-fn
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :drag] #())))
+
+(reg-sub ::get-nodes
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :data :nodes])))
+
+(reg-sub ::get-nodes-js
+  (fn [[_ viz-id] _]
+    (subscribe [::get-nodes viz-id]))
+  (fn [data _]
+    (clj->js data)))
+
+(reg-sub ::get-links
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :data :links])))
+
+(reg-sub ::get-links-js
+  (fn [[_ viz-id] _]
+    (subscribe [::get-links viz-id]))
+  (fn [data _]
+    (clj->js data)))
