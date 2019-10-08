@@ -151,7 +151,7 @@
     [(subscribe [:node-labels? viz-id])
      (subscribe [::force-subs/get-node viz-id i])])
   (fn [[show-labels node] _]
-    (when show-labels
+    (when (or (:hovered node) show-labels)
       (:name node))))
 
 (reg-event-db :toggle-link-labels
