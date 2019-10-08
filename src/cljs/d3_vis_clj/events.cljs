@@ -128,7 +128,11 @@
         (assoc-in [viz-id :reversed-col] (when-not rev? col-key))
         (update-in [viz-id :data]
                    (fn [data]
-                     (let [data (sort-by #(get-in % col-key) data)]
+                     (let [data (sort-by #(let [v get-in % col-key]
+                                            (if (coll? v)
+                                              (first v)
+                                              v))
+                                         data)]
                        (if rev?
                          data
                          (reverse data))))))))
@@ -137,7 +141,19 @@
   (fn [db [_ viz-id]]
     (assoc-in db [viz-id :data] (vals (get-in db [:all-data :mops])))))
 
+(defn toggle-contains-vector
+  [coll x]
+  (if (some #(= x %) coll)
+    (->> coll
+         (remove #(= x %))
+         (vec))
+    (conj (or coll []) x)))
+
 (rf/reg-event-db :toggle-visible-role
   (fn [db [_ viz-id role]]
-    (update-in db [viz-id :visible-roles] #(toggle-contains % role))))
+    (update-in db [viz-id :visible-roles] #(toggle-contains-vector (or % []) role))))
+
+(rf/reg-event-db :set-visible-role
+  (fn [db [_ viz-id role i]]
+    (assoc-in db [viz-id :visible-roles i] role)))
 

@@ -102,51 +102,64 @@
    [:thead
     header
     [:tr
-     (for [{:keys [col-key]} col-defs]
-       ^{:key (str col-key)}
-       [:th
-        {:on-click #(>evt [:set-sort-key viz-id col-key
-                           (<sub [:rev? viz-id col-key])])}
-        (last col-key)])]]
+     (doall
+       (for [{:keys [col-key col-header-render-fn]
+              :or   {col-header-render-fn last}} col-defs]
+         ^{:key (str (random-uuid))}
+         [:th (col-header-render-fn col-key)]))]]
    [:tbody
     (doall
       (for [{:keys [id] :as item} (<sub data-sub)]
-        ^{:key id}
+        ^{:key (str (random-uuid))}
         [:tr
          (row-options id)
-         (for [{:keys [col-key render-fn]} col-defs]
-           (let [val (get-in item col-key)]
-             ^{:key (str id "-" col-key)}
-             [:td
-              (if render-fn
-                (render-fn val)
-                val)]))]))]])
-
+         (for [{:keys [col-key render-fn]} col-defs
+               :let [val (get-in item col-key)]]
+           ^{:key (str (random-uuid))}
+           [:td
+            (if render-fn (render-fn val) val)])]))]])
+(str (uuid "x"))
 (defn role-aggregation-row
   [viz-id]
   [:tr
    [:th {:col-span 2} ""]
    [:th {:col-span (count (<sub [:visible-roles viz-id]))} "Roles"]])
 
+(defn slot-header-render-fn
+  [viz-id role i]
+  (fn [_]
+    [:div
+     [:select
+      {:on-change #(>evt [:set-visible-role viz-id
+                          (keyword (-> % .-target .-value)) i])
+       :value     role}
+      (for [-role (<sub [:all-roles viz-id])]
+        ^{:key (str (random-uuid))}
+        [:option {:value -role} -role])]
+     [:button {:type     "button"
+               :on-click #(>evt [:set-sort-key viz-id role
+                                 (<sub [:rev? viz-id role])])}
+      "sort"]]))
+
 (defn slot-cols
   [viz-id]
-  (for [role (<sub [:visible-roles viz-id])]
-    {:col-key   [:slots role]
-     :render-fn (fn [fillers]
-                  (str/join ", " fillers))}))
+  (for [[i role] (map-indexed vector (<sub [:visible-roles viz-id]))]
+    {:col-key              [:slots role]
+     :col-header-render-fn (slot-header-render-fn viz-id role i)
+     :render-fn            (fn [fillers]
+                             (str/join ", " fillers))}))
 
 (defn role-selection
   [viz-id]
   [:div
    "Select Roles "
    (for [v (<sub [:all-roles viz-id])]
-     ^{:key (str "input" v)}
+     ^{:key (str (random-uuid))}
      [:div
       [:input
        {:type      "checkbox"
         :on-change #(>evt [:toggle-visible-role viz-id v])}]
       v])])
-
 
 (defn mop-table
   "Table for displaying mop data"
