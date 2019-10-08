@@ -2,15 +2,16 @@
   (:require [re-frame.core :as rf :refer [reg-event-db reg-event-fx reg-fx
                                           reg-sub subscribe
                                           trim-v path]]
-            [d3-vis-clj.db :as db]
+            [d3.force-directed.db :as db]
             [d3.force-directed.layout :as layout]
             [d3-vis-clj.util :as util]))
 
 (reg-event-fx ::init-force-viz
   [trim-v]
-  (fn [{:keys [db]} [viz-id node opts]]
+  (fn [{:keys [db]} [viz-id node {:keys [initial-data] :as opts}]]
+    (println initial-data)
     {:db         (-> db
-                     (assoc viz-id db/default-force-layout)
+                     (update viz-id merge db/default-force-layout initial-data)
                      (update-in [viz-id :data :links] (fnil identity []))
                      (update-in [viz-id :data :nodes] (fnil identity []))
                      (assoc-in [viz-id :svg] node))
@@ -89,8 +90,8 @@
       (when new-node
         (let [{{{:keys [nodes]} :data :as config} viz-id} db
               nodes (conj nodes new-node)]
-          {:restart-sim [config nodes]
-           :db          (assoc-in db [viz-id :data :nodes] nodes)})))))
+          {::restart-sim [config nodes]
+           :db           (assoc-in db [viz-id :data :nodes] nodes)})))))
 
 (defn slots->links
   [id slots]

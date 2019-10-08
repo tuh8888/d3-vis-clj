@@ -12,6 +12,11 @@
   (fn [_ _]
     db/default-db))
 
+(reg-sub :initial-data
+  (fn [_ [_ _]]
+    db/default-force-data))
+
+
 (reg-event-db :window-resized
   [trim-v]
   (fn [db [new-width new-height]]
