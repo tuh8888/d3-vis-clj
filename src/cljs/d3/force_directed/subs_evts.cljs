@@ -1,7 +1,7 @@
 (ns d3.force-directed.subs-evts
   (:require [re-frame.core :as rf :refer [reg-event-db reg-event-fx reg-fx
                                           reg-sub subscribe
-                                          trim-v]]
+                                          trim-v path]]
             [d3-vis-clj.db :as db]
             [d3.force-directed.layout :as layout]
             [d3-vis-clj.util :as util]))
@@ -132,15 +132,19 @@
   (fn [[config nodes links]]
     (layout/restart config :nodes nodes :links links)))
 
+(def path-node
+  [trim-v (util/path-nth) (path [:data :nodes]) (util/path-nth)])
+
 (reg-event-db ::toggle-hovered-node
-  [trim-v (util/path-nth) (rf/path [:data :nodes])]
-  (fn [db [i]]
-    (update-in db [i :hovered] not)))
+  (conj path-node (path [:hovered]))
+  not)
+
+(def path-link
+  [trim-v (util/path-nth) (path [:data :links]) (util/path-nth)])
 
 (reg-event-db ::toggle-hovered-link
-  [trim-v (util/path-nth) (rf/path [:data :links])]
-  (fn [db [i]]
-    (update-in db [i :hovered] not)))
+  (conj path-link (path [:hovered]))
+  not)
 
 (reg-event-db ::toggle-selected-node
   [trim-v (util/path-nth)]

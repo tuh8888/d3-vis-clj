@@ -42,7 +42,8 @@
    (path-nth 0))
   ([i]
    (let [db-store-key         :re-frame-path/db-store
-         first-path-store-key ::first-path-store]
+         first-path-store-key (keyword *ns* (str (name ::first-path-store)
+                                                 (random-uuid)))]
      (->interceptor
        :id :viz-id-path
        :before (fn [context]
