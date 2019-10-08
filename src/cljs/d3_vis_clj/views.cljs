@@ -36,7 +36,7 @@
     {:node-opts {:ons       {:click #(if js/d3.event.ctrlKey
                                        (>evt [::force-evts/expand-node viz-id %2])
                                        (>evt [::force-evts/toggle-selected-node viz-id %2]))}
-                 :fill-fn   #(<sub [::force-subs/node-color viz-id %2])
+                 :fill-fn   #(<sub [:node-color viz-id %2])
                  :stroke-fn #(<sub [::force-subs/node-outer-color viz-id %2])}}]])
 
 (defn role-aggregation-row

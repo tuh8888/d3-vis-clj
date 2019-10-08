@@ -21,15 +21,6 @@
   (fn [db [_ viz-id i]]
     (get-in db [viz-id :data :links i])))
 
-(reg-sub ::node-color
-  (fn [[_ viz-id i] _]
-    [(subscribe [:hierarchy]) (subscribe [::get-node viz-id i])])
-  (fn [[h {:keys [id hovered]}] _]
-    (cond hovered "yellow"
-          (isa? h id :A) "red"
-          (isa? h id :B) "blue"
-          :default "green")))
-
 (reg-sub ::selected-node
   (fn [db [_ viz-id]]
     (get-in db [viz-id :selected :node])))
