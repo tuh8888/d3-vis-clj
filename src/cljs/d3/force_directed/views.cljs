@@ -6,19 +6,24 @@
             [d3.force-directed.interaction :as force-interaction]))
 
 (defn link-did-mount
-  [node viz-id _]
+  [node viz-id {:keys [ons]}]
   (let [{:keys [stroke-width stroke]} (<sub [::ses/link-config viz-id])]
-    (rid3-> node
-      {:stroke-width stroke-width
-       :stroke       stroke})))
+    (-> node
+        (rid3->
+          {:stroke-width stroke-width
+           :stroke       stroke})
+        (util/set-ons
+          (merge {:mouseover #(>evt [::ses/toggle-hovered-link viz-id %2])
+                  :mouseout  #(>evt [::ses/toggle-hovered-link viz-id %2])}
+                 ons)))))
 
 (defn node-or-text-did-mount
   [node viz-id {:keys [ons]}]
   (-> node
       (.call (<sub [::ses/drag-fn viz-id]))
       (util/set-ons
-        (merge {:mouseover #(>evt [::ses/set-hovered viz-id %2 true])
-                :mouseout  #(>evt [::ses/set-hovered viz-id %2 false])}
+        (merge {:mouseover #(>evt [::ses/toggle-hovered-node viz-id %2])
+                :mouseout  #(>evt [::ses/toggle-hovered-node viz-id %2])}
                ons))))
 
 (defn node-did-mount

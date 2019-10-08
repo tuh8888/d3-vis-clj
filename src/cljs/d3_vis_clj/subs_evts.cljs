@@ -36,12 +36,12 @@
     (:width db)))
 
 (reg-event-db :toggle-selected-mop
-  [util/viz-id-path trim-v]
+  [trim-v (util/path-nth)]
   (fn [db [id]]
     (update-in db [:selected] #(util/toggle-contains-set % id))))
 
 (reg-event-db :toggle-sort-role
-  [util/viz-id-path trim-v]
+  [trim-v (util/path-nth)]
   (fn [db [role]]
     (let [sorted? (get-in db [:sorted-roles role])]
       (-> db
@@ -75,13 +75,13 @@
     (assoc-in db [viz-id :data] (vals (get-in db [:all-data :mops])))))
 
 (reg-event-db :toggle-visible-role
-  [util/viz-id-path trim-v]
+  [trim-v (util/path-nth)]
   (fn [db [role]]
     (update-in db [:visible-roles]
                #(util/toggle-contains-vector (or % []) role))))
 
 (reg-event-db :set-visible-role
-  [util/viz-id-path trim-v]
+  [trim-v (util/path-nth)]
   (fn [db [role i]]
     (assoc-in db [:visible-roles i] role)))
 
@@ -92,7 +92,7 @@
     (some #(= role %) roles)))
 
 (reg-event-db :add-visible-role
-  [util/viz-id-path trim-v]
+  [trim-v (util/path-nth)]
   (fn [db [role]]
     (update-in db [:visible-roles] #(conj (or % []) role))))
 
@@ -134,7 +134,7 @@
     (every? (set visible-roles) all-roles)))
 
 (reg-event-db :toggle-node-labels
-  [util/viz-id-path
+  [trim-v (util/path-nth)
    (rf/path [:node-config :show-labels])]
   not)
 

@@ -43,27 +43,27 @@
     (get-in db [viz-id :svg])))
 
 (reg-event-db ::set-node-elems
-  [util/viz-id-path trim-v]
+  [trim-v (util/path-nth)]
   (fn [db [elems]]
     (assoc-in db [:elems :node] elems)))
 
 (reg-event-db ::set-link-elems
-  [util/viz-id-path trim-v]
+  [trim-v (util/path-nth)]
   (fn [db [elems]]
     (assoc-in db [:elems :link] elems)))
 
 (reg-event-db ::set-link-text-elems
-  [util/viz-id-path trim-v]
+  [trim-v (util/path-nth)]
   (fn [db [elems]]
     (assoc-in db [:elems :link-text] elems)))
 
 (reg-event-db ::set-text-elems
-  [util/viz-id-path trim-v]
+  [trim-v (util/path-nth)]
   (fn [db [elems]]
     (assoc-in db [:elems :text] elems)))
 
 (reg-event-db ::resize-nodes
-  [util/viz-id-path trim-v]
+  [trim-v (util/path-nth)]
   (fn [db [size]]
     (assoc-in db [:node-config :r] size)))
 
@@ -75,7 +75,7 @@
                             opts))))
 
 (reg-event-db ::set-node-to-add
-  [util/viz-id-path trim-v]
+  [trim-v (util/path-nth)]
   (fn [db [node-id]]
     (assoc-in db [:node-to-add] (keyword node-id))))
 
@@ -132,13 +132,18 @@
   (fn [[config nodes links]]
     (layout/restart config :nodes nodes :links links)))
 
-(reg-event-db ::set-hovered
-  [util/viz-id-path trim-v]
-  (fn [db [i val]]
-    (assoc-in db [:data :nodes i :hovered] val)))
+(reg-event-db ::toggle-hovered-node
+  [trim-v (util/path-nth) (rf/path [:data :nodes])]
+  (fn [db [i]]
+    (update-in db [i :hovered] not)))
+
+(reg-event-db ::toggle-hovered-link
+  [trim-v (util/path-nth) (rf/path [:data :links])]
+  (fn [db [i]]
+    (update-in db [i :hovered] not)))
 
 (reg-event-db ::toggle-selected-node
-  [util/viz-id-path trim-v]
+  [trim-v (util/path-nth)]
   (fn [db [i]]
     (update-in db [:data :nodes i :selected] not)))
 
