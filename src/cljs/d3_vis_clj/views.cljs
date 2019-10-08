@@ -20,9 +20,10 @@
 (defn node-labels-check-box
   [viz-id]
   [:div
-   [:input {:type      "checkbox"
-            :checked   #(<sub [:node-labels? viz-id])
-            :on-change #(>evt [:toggle-node-labels viz-id])}]
+   [:input
+    {:type      "checkbox"
+     :checked   (<sub [:node-labels? viz-id])
+     :on-change #(>evt [:toggle-node-labels viz-id])}]
    [:label "Display node labels"]])
 
 (defn add-node-btn

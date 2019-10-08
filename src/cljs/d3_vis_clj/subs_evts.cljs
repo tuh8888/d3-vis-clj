@@ -138,9 +138,8 @@
     (every? (set visible-roles) all-roles)))
 
 (reg-event-db :toggle-node-labels
-  [util/viz-id-interceptor trim-v rf/debug]
-  (fn [db []]
-    (update-in db [:node-config :show-labels] not)))
+  (fn [db [_ viz-id]]
+    (update-in db [viz-id :node-config :show-labels] not)))
 
 (reg-sub :node-labels?
   (fn [db [_ viz-id]]
