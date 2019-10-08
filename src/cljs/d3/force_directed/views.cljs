@@ -6,7 +6,7 @@
             [d3.force-directed.events :as evts]))
 
 (defn link-did-mount
-  [node viz-id]
+  [node viz-id _]
   (let [{:keys [stroke-width stroke]} (<sub [::subs/link-config viz-id])]
     (rid3-> node
       {:stroke-width stroke-width
@@ -38,13 +38,13 @@
       (node-or-text-did-mount viz-id node-opts)))
 
 (defn link-text-did-mount
-  [node viz-id]
+  [node _ {:keys [label-fn]}]
   (-> node
       (rid3-> {:text-anchor "middle"})
-      (.text #(<sub [::subs/link-name viz-id %2]))))
+      (.text label-fn)))
 
 
-(defn force-viz-graph [viz-id {:keys [node-opts]}]
+(defn force-viz-graph [viz-id {:keys [node-opts link-opts]}]
   [rid3/viz
    {:id     (str (name viz-id) "-graph")
     :ratom  (rf/subscribe [:common.subs/viz viz-id])
@@ -59,14 +59,14 @@
               :class           "link"
               :did-mount       #(rf/dispatch-sync
                                   [::evts/set-link-elems viz-id
-                                   (link-did-mount % viz-id)])
+                                   (link-did-mount % viz-id link-opts)])
               :prepare-dataset #(<sub [::subs/get-links-js viz-id])}
              {:kind            :elem-with-data
               :tag             "text"
               :class           "link-text"
               :did-mount       #(rf/dispatch-sync
                                   [::evts/set-link-text-elems viz-id
-                                   (link-text-did-mount % viz-id)])
+                                   (link-text-did-mount % viz-id link-opts)])
               :prepare-dataset #(<sub [::subs/get-links-js viz-id])}
              {:kind            :elem-with-data
               :tag             "circle"

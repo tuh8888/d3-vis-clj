@@ -153,6 +153,22 @@
     (when show-labels
       (:name node))))
 
+(reg-event-db :toggle-link-labels
+  (fn [db [_ viz-id]]
+    (update-in db [viz-id :link-config :show-labels] not)))
+
+(reg-sub :link-labels?
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :link-config :show-labels])))
+
+(reg-sub :link-label
+  (fn [[_ viz-id i] _]
+    [(subscribe [:link-labels? viz-id])
+     (subscribe [::force-subs/get-link viz-id i])])
+  (fn [[show-labels link] _]
+    (when show-labels
+      (:label link))))
+
 (reg-sub :name
   (fn [db]
     (:name db)))
