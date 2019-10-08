@@ -37,3 +37,7 @@ table > thead th:after {
     font-family: Icons;
     margin-left: .5em;
 }
+
+tbody > tr.selected {
+    background-color: aqua;
+}

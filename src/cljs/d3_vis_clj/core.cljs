@@ -21,5 +21,6 @@
 
 (defn render []
   (rf/dispatch-sync [:initialize-db])
+  (rf/dispatch-sync [:init-mop-table :panel1])
   (dev-setup)
   (mount-root))

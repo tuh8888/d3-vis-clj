@@ -96,11 +96,11 @@
 
 (defn data-table
   [viz-id data-sub col-defs
-   {:keys [additional-header-row
-           on-row-click]}]
+   {:keys [header
+           row-options]}]
   [:table.ui.table
    [:thead
-    additional-header-row
+    header
     [:tr
      (for [{:keys [col-key]} col-defs]
        ^{:key (str col-key)}
@@ -109,17 +109,18 @@
                            (<sub [:rev? viz-id col-key])])}
         (last col-key)])]]
    [:tbody
-    (for [{:keys [id] :as item} (<sub data-sub)]
-      ^{:key id}
-      [:tr
-       {:on-click #(on-row-click id)}
-       (for [{:keys [col-key render-fn]} col-defs]
-         (let [val (get-in item col-key)]
-           ^{:key (str id "-" col-key)}
-           [:td
-            (if render-fn
-              (render-fn val)
-              val)]))])]])
+    (doall
+      (for [{:keys [id] :as item} (<sub data-sub)]
+        ^{:key id}
+        [:tr
+         (row-options id)
+         (for [{:keys [col-key render-fn]} col-defs]
+           (let [val (get-in item col-key)]
+             ^{:key (str id "-" col-key)}
+             [:td
+              (if render-fn
+                (render-fn val)
+                val)]))]))]])
 
 (defn role-aggregation-row
   [viz-id]
@@ -137,17 +138,18 @@
 (defn mop-table
   "Table for displaying mop data"
   [viz-id]
-  (rf/dispatch-sync [:init-mop-table viz-id])
-  (fn []
-    [:div
-     [data-table
-      viz-id
-      [:visible-mops viz-id]
-      (into [{:col-key [:id]}
-             {:col-key [:name]}]
-            (slot-cols viz-id))
-      {:additional-header-row (role-aggregation-row viz-id)
-       :on-row-click          (fn [id] (>evt [:toggle-selected-mop viz-id id]))}]]))
+  [:div
+   [data-table
+    viz-id
+    [:visible-mops viz-id]
+    (into [{:col-key [:id]}
+           {:col-key [:name]}]
+          (slot-cols viz-id))
+    {:header      (role-aggregation-row viz-id)
+     :row-options (fn [id]
+                    {:on-click #(>evt [:toggle-selected-mop viz-id id])
+                     :class    [(when (<sub [:selected-mop? viz-id id])
+                                  "selected")]})}]])
 
 (defn main-panel []
   [:div

@@ -96,3 +96,7 @@
 (rf/reg-sub :rev?
   (fn [db [_ viz-id col-key]]
     (= col-key (get-in db [viz-id :reversed-col]))))
+
+(rf/reg-sub :selected-mop?
+  (fn [db [_ viz-id id]]
+    (contains? (get-in db [viz-id :selected]) id)))
