@@ -101,10 +101,13 @@
     header
     [:tr
      (doall
-       (for [{:keys [col-key col-header-render-fn]
+       (for [{:keys [col-key col-header-render-fn
+                     col-header-options]
               :or   {col-header-render-fn last}} col-defs]
          ^{:key (str (random-uuid))}
-         [:th (col-header-render-fn col-key)]))]]
+         [:th
+          col-header-options
+          (col-header-render-fn col-key)]))]]
    [:tbody
     (doall
       (for [{:keys [id] :as item} (<sub data-sub)]
@@ -116,7 +119,7 @@
            ^{:key (str (random-uuid))}
            [:td
             (if render-fn (render-fn val) val)])]))]])
-(str (uuid "x"))
+
 (defn role-aggregation-row
   [viz-id]
   [:tr
@@ -135,8 +138,7 @@
         ^{:key (str (random-uuid))}
         [:option {:value -role} -role])]
      [:button {:type     "button"
-               :on-click #(>evt [:set-sort-key viz-id role
-                                 (<sub [:rev? viz-id role])])}
+               :on-click #(>evt [:toggle-sort-role viz-id role])}
       "sort"]]))
 
 (defn slot-cols
@@ -144,6 +146,11 @@
   (for [[i role] (map-indexed vector (<sub [:visible-roles viz-id]))]
     {:col-key              [:slots role]
      :col-header-render-fn (slot-header-render-fn viz-id role i)
+     :col-header-options   {:class (str/join " "
+                                             ["sorted-by"
+                                              (if (<sub [:sorted-role? viz-id role])
+                                                "asc"
+                                                "desc")])}
      :render-fn            (fn [fillers]
                              (str/join ", " fillers))}))
 

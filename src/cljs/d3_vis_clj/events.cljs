@@ -176,21 +176,24 @@
   (fn [db [id]]
     (update-in db [:selected] #(toggle-contains % id))))
 
-(reg-event-db :set-sort-key
+(reg-event-db :toggle-sort-role
   [viz-id-interceptor trim-v]
-  (fn [db [col-key rev?]]
-    (-> db
-        (assoc-in [:reversed-col] (when-not rev? col-key))
-        (update-in [:data]
-                   (fn [data]
-                     (let [data (sort-by #(let [v (get-in % col-key)]
-                                            (if (coll? v)
-                                              (first v)
-                                              v))
-                                         data)]
-                       (if rev?
-                         data
-                         (reverse data))))))))
+  (fn [db [role]]
+    (let [sorted? (get-in db [:sorted-roles role])]
+      (-> db
+          (update-in [:sorted-roles] #(if sorted?
+                                        (disj % role)
+                                        (conj (or % #{}) role)))
+          (update-in [:data]
+                     (fn [data]
+                       (let [data (sort-by #(let [v (get-in % [:slots role])]
+                                              (if (coll? v)
+                                                (first v)
+                                                v))
+                                           data)]
+                         (if sorted?
+                           data
+                           (reverse data)))))))))
 
 (reg-event-db :init-mop-table
   [trim-v]
@@ -208,7 +211,8 @@
 (reg-event-db :toggle-visible-role
   [viz-id-interceptor trim-v]
   (fn [db [role]]
-    (update-in db [:visible-roles] #(toggle-contains-vector (or % []) role))))
+    (update-in db [:visible-roles]
+               #(toggle-contains-vector (or % []) role))))
 
 (reg-event-db :set-visible-role
   [viz-id-interceptor trim-v]
@@ -220,11 +224,10 @@
   (fn [db [role]]
     (update-in db [:visible-roles] #(conj (or % []) role))))
 
-(rf/reg-cofx
-  :all-roles
-  (fn [{[viz-id] :event :as coeffects}]
-    (assoc coeffects :all-roles @(rf/subscribe [:all-roles viz-id])
-                     :all-roles-visible? @(rf/subscribe [:all-roles-visible? viz-id]))))
+(rf/reg-cofx :all-roles
+             (fn [{[viz-id] :event :as coeffects}]
+               (assoc coeffects :all-roles @(rf/subscribe [:all-roles viz-id])
+                                :all-roles-visible? @(rf/subscribe [:all-roles-visible? viz-id]))))
 
 (reg-event-fx :toggle-all-roles
   [trim-v (rf/inject-cofx :all-roles)]

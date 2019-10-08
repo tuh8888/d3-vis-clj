@@ -93,15 +93,16 @@
   (fn [db [_ viz-id]]
     (get-in db [viz-id :visible-roles])))
 
-(reg-sub :reversed-col
+(reg-sub :sorted-roles
   (fn [db [_ viz-id]]
-    (get-in db [viz-id :reversed-col])))
+    (get-in db [viz-id :sorted-roles])))
 
-(reg-sub :rev?
+(reg-sub :sorted-role?
   (fn [[_ viz-id] _]
-    (subscribe [:reversed-col viz-id]))
-  (fn [rev [_ _ col-key]]
-    (= col-key rev)))
+    (subscribe [:sorted-roles viz-id]))
+  (fn [roles [_ _ role]]
+    (println roles)
+    (contains? roles role)))
 
 (reg-sub :selected-mop?
   (fn [[_ viz-id] _]
