@@ -11,6 +11,8 @@
   (fn [{:keys [db]} [viz-id node opts]]
     {:db         (-> db
                      (assoc viz-id db/default-force-layout)
+                     (update-in [viz-id :data :links] (fnil identity []))
+                     (update-in [viz-id :data :nodes] (fnil identity []))
                      (assoc-in [viz-id :svg] node))
      :dispatch-n (list [::initialize-viz-resize viz-id opts]
                        [::initialize-sim viz-id opts])}))
@@ -153,7 +155,7 @@
 
 (reg-sub ::node-size
   (fn [db [_ viz-id]]
-    (get-in db [viz-id :node-config :r])))
+    (get-in db [viz-id :node-config :r] 10)))
 
 (reg-sub ::node-to-add
   (fn [db [_ viz-id]]

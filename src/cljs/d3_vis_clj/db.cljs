@@ -50,9 +50,7 @@
                    :charge  {:strength -120}
                    :link    {:distance 10
                              :strength :true}}
-   :node-config   {:r 10}
-   :data          {:nodes [(get-in example-mops [:mops :x1])]
-                   :links []}})
+   :data          {:nodes [(get-in example-mops [:mops :x1])]}})
 
 (def default-db
   {:name     "d3-vis-clj"
