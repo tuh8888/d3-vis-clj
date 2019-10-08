@@ -57,7 +57,7 @@
                                        (>evt [::force-evts/expand-node viz-id %2])
                                        (>evt [::force-evts/toggle-selected-node viz-id %2]))}
                  :fill-fn   #(<sub [:node-color viz-id %2])
-                 :stroke-fn #(<sub [::force-subs/node-outer-color viz-id %2])
+                 :stroke-fn #(<sub [:node-stroke viz-id %2])
                  :label-fn  #(<sub [:node-label viz-id %2])}
      :link-opts {:label-fn #(<sub [:link-label viz-id %2])}}]])
 

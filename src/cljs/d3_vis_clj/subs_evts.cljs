@@ -151,7 +151,9 @@
     [(subscribe [:node-labels? viz-id])
      (subscribe [::force-subs/get-node viz-id i])])
   (fn [[show-labels node] _]
-    (when (or (:hovered node) show-labels)
+    (when (or (:selected node)
+              (:hovered node)
+              show-labels)
       (:name node))))
 
 (reg-event-db :toggle-link-labels
@@ -187,6 +189,12 @@
     [(subscribe [:hierarchy]) (subscribe [::force-subs/get-node viz-id i])])
   (fn [[h {:keys [id hovered]}] _]
     (cond hovered "yellow"
-          (isa? h id :A) "red"
-          (isa? h id :B) "blue"
-          :default "green")))
+          (isa? h id :A) "cyan"
+          (isa? h id :B) "light-grey"
+          :default "white")))
+
+(reg-sub :node-stroke
+  (fn [db [_ viz-id i]]
+    (if (get-in db [viz-id :data :nodes i :selected])
+      "red"
+      "white")))
