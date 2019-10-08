@@ -13,25 +13,13 @@
   (fn [db [_ viz-id]]
     (get-in db [viz-id :link-config])))
 
-(reg-sub ::get-node
+(reg-sub ::node
   (fn [db [_ viz-id i]]
     (get-in db [viz-id :data :nodes i])))
 
-(reg-sub ::get-link
+(reg-sub ::link
   (fn [db [_ viz-id i]]
     (get-in db [viz-id :data :links i])))
-
-(reg-sub ::node-name
-  (fn [[_ viz-id i] _]
-    (subscribe [::get-node viz-id i]))
-  (fn [{:keys [name]} _]
-    name))
-
-(reg-sub ::link-name
-  (fn [[_ viz-id i] _]
-    (subscribe [::get-link viz-id i]))
-  (fn [{:keys [label]}]
-    label))
 
 (reg-sub ::drag-fn
   (fn [db [_ viz-id]]

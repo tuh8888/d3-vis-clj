@@ -149,7 +149,7 @@
 (reg-sub :node-label
   (fn [[_ viz-id i] _]
     [(subscribe [:node-labels? viz-id])
-     (subscribe [::force-subs/get-node viz-id i])])
+     (subscribe [::force-subs/node viz-id i])])
   (fn [[show-labels node] _]
     (when (or (:selected node)
               (:hovered node)
@@ -167,7 +167,7 @@
 (reg-sub :link-label
   (fn [[_ viz-id i] _]
     [(subscribe [:link-labels? viz-id])
-     (subscribe [::force-subs/get-link viz-id i])])
+     (subscribe [::force-subs/link viz-id i])])
   (fn [[show-labels link] _]
     (when show-labels
       (:label link))))
@@ -186,7 +186,7 @@
 
 (reg-sub :node-color
   (fn [[_ viz-id i] _]
-    [(subscribe [:hierarchy]) (subscribe [::force-subs/get-node viz-id i])])
+    [(subscribe [:hierarchy]) (subscribe [::force-subs/node viz-id i])])
   (fn [[h {:keys [id hovered]}] _]
     (cond hovered "yellow"
           (isa? h id :A) "cyan"
@@ -195,7 +195,7 @@
 
 (reg-sub :node-stroke
   (fn [[_ viz-id i]]
-    (subscribe [::force-subs/get-node viz-id i]))
+    (subscribe [::force-subs/node viz-id i]))
   (fn [node _]
     (if (:selected node)
       "red"
