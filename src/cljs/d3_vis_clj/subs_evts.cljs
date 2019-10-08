@@ -14,22 +14,18 @@
 
 (reg-event-db :window-resized
   [trim-v]
-  (fn [db [viz-id new-width new-height]]
+  (fn [db [new-width new-height]]
     (-> db
         (assoc-in [:height] new-height)
-        (assoc-in [:width] new-width)
-        (assoc-in [viz-id :height] new-height)
-        (assoc-in [viz-id :width] new-width))))
+        (assoc-in [:width] new-width))))
 
 (reg-event-fx :initialize-window-resize
   [trim-v]
-  (fn [{:keys [db]} [viz-id init-width init-height]]
-    {:window/on-resize {:dispatch [:window-resized viz-id]}
-     :db               (-> db
-                           (assoc-in [:height] init-height)
-                           (assoc-in [:width] init-width)
-                           (assoc-in [viz-id :height] init-height)
-                           (assoc-in [viz-id :width] init-width))}))
+  (fn [_ _]
+    (let [init-width  js/window.innerWidth
+          init-height js/window.innerHeight]
+      {:window/on-resize {:dispatch [:window-resize]}
+       :dispatch         [:window-resize init-width init-height]})))
 
 (reg-sub :window-height
   (fn [db]

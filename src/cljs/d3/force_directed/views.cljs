@@ -50,8 +50,8 @@
     :ratom  (rf/subscribe [:common.subs/viz viz-id])
     :svg    {:did-mount  #(rf/dispatch-sync [::evts/init-force-viz viz-id])
              :did-update #(rid3-> %
-                            {:width  (<sub [:window-width])
-                             :height (<sub [:window-height])
+                            {:width  (<sub [::evts/width viz-id])
+                             :height (<sub [::evts/height viz-id])
                              :style  {:background-color "grey"}})}
 
     :pieces [{:kind            :elem-with-data

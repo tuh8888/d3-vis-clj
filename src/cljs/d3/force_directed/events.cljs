@@ -1,5 +1,6 @@
 (ns d3.force-directed.events
   (:require [re-frame.core :as rf :refer [reg-event-db reg-event-fx reg-fx
+                                          reg-sub
                                           trim-v]]
             [d3-vis-clj.db :as db]
             [d3.force-directed.layout :as layout]
@@ -9,9 +10,32 @@
   [trim-v]
   (fn [{:keys [db]} [viz-id]]
     {:db         (assoc db viz-id db/default-force-layout)
-     :dispatch-n (list [:initialize-window-resize viz-id
-                        js/window.innerWidth js/window.innerHeight]
+     :dispatch-n (list [::initialize-viz-resize viz-id]
                        [::initialize-sim viz-id])}))
+
+(reg-event-fx ::initialize-viz-resize
+  [trim-v]
+  (fn [_ [viz-id]]
+    (let [init-width  js/window.innerWidth
+          init-height js/window.innerHeight]
+      (println init-width init-height)
+      {:window/on-resize {:dispatch [::viz-resize viz-id]}
+       :dispatch         [::viz-resize viz-id init-width init-height]})))
+
+(reg-event-db ::viz-resize
+  [trim-v]
+  (fn [db [viz-id new-width new-height]]
+    (-> db
+        (assoc-in [viz-id :height] new-height)
+        (assoc-in [viz-id :width] new-width))))
+
+(reg-sub ::height
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :height])))
+
+(reg-sub ::width
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :width])))
 
 (reg-event-db ::set-node-elems
   [util/viz-id-path trim-v]

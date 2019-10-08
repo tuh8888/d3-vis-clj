@@ -48,18 +48,25 @@
 (defn force-viz
   [viz-id]
   [:div
-   [node-size-text-box viz-id]
-   [add-node-btn viz-id]
-   [node-labels-check-box viz-id]
-   [link-labels-check-box viz-id]
-   [force-views/force-viz-graph viz-id
-    {:node-opts {:ons       {:click #(if js/d3.event.ctrlKey
-                                       (>evt [::force-evts/expand-node viz-id %2])
-                                       (>evt [::force-evts/toggle-selected-node viz-id %2]))}
-                 :fill-fn   #(<sub [:node-color viz-id %2])
-                 :stroke-fn #(<sub [:node-stroke viz-id %2])
-                 :label-fn  #(<sub [:node-label viz-id %2])}
-     :link-opts {:label-fn #(<sub [:link-label viz-id %2])}}]])
+   {:style {:display "flex"}}
+   [:div
+    {:style {:width "10%"}}
+    [node-size-text-box viz-id]
+    [add-node-btn viz-id]
+    [node-labels-check-box viz-id]
+    [link-labels-check-box viz-id]]
+   [:div
+    {:style {:flex-grow "1"}}
+    [force-views/force-viz-graph viz-id
+     {:svg-opts  {:width  0.9
+                  :height 0.5}
+      :node-opts {:ons       {:click #(if js/d3.event.ctrlKey
+                                        (>evt [::force-evts/expand-node viz-id %2])
+                                        (>evt [::force-evts/toggle-selected-node viz-id %2]))}
+                  :fill-fn   #(<sub [:node-color viz-id %2])
+                  :stroke-fn #(<sub [:node-stroke viz-id %2])
+                  :label-fn  #(<sub [:node-label viz-id %2])}
+      :link-opts {:label-fn #(<sub [:link-label viz-id %2])}}]]])
 
 (defn role-aggregation-row
   [viz-id]
@@ -127,21 +134,31 @@
   "Table for displaying mop data"
   [viz-id]
   [:div
-   [role-selection viz-id]
-   [dt-views/data-table
-    [:visible-mops viz-id]
-    (into [{:col-key [:id]}
-           {:col-key [:name]}]
-          (slot-cols viz-id))
-    {:header      (role-aggregation-row viz-id)
-     :row-options (fn [id]
-                    {:on-click #(>evt [:toggle-selected-mop viz-id id])
-                     :style    {:fill "blue"}
-                     :class    [(when (<sub [::c-subs/selected? viz-id id])
-                                  "selected")]})}]])
+   {:style {:display "flex"}}
+   [:div
+    {:style {:width    "10%"
+             :height   "50vh"
+             :overflow "scroll"}}
+    [role-selection viz-id]]
+   [:div
+    {:style {:flex-grow "1"
+             :height    "50vh"
+             :overflow  "scroll"}}
+    [dt-views/data-table
+     [:visible-mops viz-id]
+     (into [{:col-key [:id]}
+            {:col-key [:name]}]
+           (slot-cols viz-id))
+     {:header      (role-aggregation-row viz-id)
+      :row-options (fn [id]
+                     {:on-click #(>evt [:toggle-selected-mop viz-id id])
+                      :style    {:fill "blue"}
+                      :class    [(when (<sub [::c-subs/selected? viz-id id])
+                                   "selected")]})}]]])
 
 (defn main-panel []
   [:div
    [:h1 (<sub [:name])]
-   [mop-table :panel1]
-   [force-viz :force-viz1]])
+   [:div
+    [mop-table :panel1]
+    [force-viz :force-viz1]]])
