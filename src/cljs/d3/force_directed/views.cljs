@@ -35,6 +35,13 @@
       (.text #(<sub [::subs/node-name viz-id %2]))
       (node-or-text-did-mount viz-id node-opts)))
 
+(defn link-text-did-mount
+  [node viz-id]
+  (-> node
+      (rid3-> {:text-anchor "middle"})
+      (.text #(<sub [::subs/link-name viz-id %2]))))
+
+
 (defn force-viz-graph [viz-id {:keys [node-opts]}]
   [rid3/viz
    {:id     (str (name viz-id) "-graph")
@@ -51,6 +58,13 @@
               :did-mount       #(rf/dispatch-sync
                                   [::evts/set-link-elems viz-id
                                    (link-did-mount % viz-id)])
+              :prepare-dataset #(<sub [::subs/get-links-js viz-id])}
+             {:kind            :elem-with-data
+              :tag             "text"
+              :class           "link-text"
+              :did-mount       #(rf/dispatch-sync
+                                  [::evts/set-link-text-elems viz-id
+                                   (link-text-did-mount % viz-id)])
               :prepare-dataset #(<sub [::subs/get-links-js viz-id])}
              {:kind            :elem-with-data
               :tag             "circle"

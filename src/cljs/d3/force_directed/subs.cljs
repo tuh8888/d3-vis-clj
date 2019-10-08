@@ -21,6 +21,10 @@
   (fn [db [_ viz-id i]]
     (get-in db [viz-id :data :nodes i])))
 
+(reg-sub ::get-link
+  (fn [db [_ viz-id i]]
+    (get-in db [viz-id :data :links i])))
+
 (reg-sub ::node-color
   (fn [[_ viz-id i] _]
     [(subscribe [:hierarchy]) (subscribe [::get-node viz-id i])])
@@ -35,6 +39,12 @@
     (subscribe [::get-node viz-id i]))
   (fn [{:keys [name]} _]
     name))
+
+(reg-sub ::link-name
+  (fn [[_ viz-id i] _]
+    (subscribe [::get-link viz-id i]))
+  (fn [{:keys [label]}]
+    label))
 
 (reg-sub ::drag-fn
   (fn [db [_ viz-id]]

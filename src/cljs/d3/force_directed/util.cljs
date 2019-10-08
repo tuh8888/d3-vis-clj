@@ -16,6 +16,24 @@
     :source (.-source link)
     :target (.-target link)))
 
+(defn link-midpoint
+  [link]
+  (let [source (link-endpoint link :source)
+        target (link-endpoint link :target)
+        sx     (coord source :x)
+        sy     (coord source :y)
+        tx     (coord target :x)
+        ty     (coord target :y)
+        dx     (- tx sx)
+        dy     (- ty sy)
+        dist   (Math/sqrt
+                 (+ (Math/pow dx 2)
+                    (Math/pow dy 2)))]
+    [(+ (/ dx dist)
+        (/ (+ sx tx) 2))
+     (+ (/ dy dist)
+        (/ (+ sy ty) 2))]))
+
 (defn event-active?
   []
   (-> js/d3

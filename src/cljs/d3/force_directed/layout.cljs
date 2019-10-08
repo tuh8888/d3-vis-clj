@@ -58,10 +58,10 @@
   [sim link-elems]
   (when link-elems
     (rid3-> link-elems
-            {:x1 (fn [_ i] (util/get-link sim i :source :x))
-             :y1 (fn [_ i] (util/get-link sim i :source :y))
-             :x2 (fn [_ i] (util/get-link sim i :target :x))
-             :y2 (fn [_ i] (util/get-link sim i :target :y))})))
+      {:x1 (fn [_ i] (util/get-link sim i :source :x))
+       :y1 (fn [_ i] (util/get-link sim i :source :y))
+       :x2 (fn [_ i] (util/get-link sim i :target :x))
+       :y2 (fn [_ i] (util/get-link sim i :target :y))})))
 
 
 (defn ^:private update-node-elems
@@ -69,9 +69,18 @@
   [sim node-elems]
   (when node-elems
     (rid3-> node-elems
-            {:transform (fn [_ i]
-                          (util/translate (util/get-node sim i :x)
-                                          (util/get-node sim i :y)))})))
+      {:transform (fn [_ i]
+                    (util/translate (util/get-node sim i :x)
+                                    (util/get-node sim i :y)))})))
+
+(defn ^:private update-link-text-elems
+  "Updates node elements with position provided by simulation"
+  [sim link-text-elems]
+  (when link-text-elems
+    (rid3-> link-text-elems
+      {:transform (fn [_ i]
+                    (let [[x y] (util/link-midpoint (util/get-link sim i))]
+                      (util/translate x y)))})))
 
 (defn ^:private set-tick!
   [sim ratom]
@@ -83,7 +92,8 @@
                (set-forces! @ratom :reset? true)
                (update-node-elems (get-in @ratom [:elems :node]))
                (update-node-elems (get-in @ratom [:elems :text]))
-               (update-link-elems (get-in @ratom [:elems :link])))))
+               (update-link-elems (get-in @ratom [:elems :link]))
+               (update-link-text-elems (get-in @ratom [:elems :link-text])))))
       (util/set-alpha-target! 0.3)
       (.restart)))
 
@@ -99,8 +109,8 @@
                                          (get-in @ratom [:data :links])))))
               (set-tick! ratom))]
     (.log js/console "Sim restarted"
-             "nodes:" (-> sim (util/get-nodes) (alength))
-             "links:" (-> sim (util/get-links) (alength)))
+          "nodes:" (-> sim (util/get-nodes) (alength))
+          "links:" (-> sim (util/get-links) (alength)))
     sim))
 
 (defn restart

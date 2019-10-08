@@ -27,6 +27,11 @@
   (fn [db [elems]]
     (assoc-in db [:elems :link] elems)))
 
+(reg-event-db ::set-link-text-elems
+  [util/viz-id-interceptor trim-v]
+  (fn [db [elems]]
+    (assoc-in db [:elems :link-text] elems)))
+
 (reg-event-db ::set-text-elems
   [util/viz-id-interceptor trim-v]
   (fn [db [elems]]
