@@ -30,10 +30,11 @@
       (node-or-text-did-mount viz-id node-opts)))
 
 (defn text-did-mount
-  [node viz-id node-opts]
+  [node viz-id {:as   node-opts
+                :keys [node-label-fn]}]
   (-> node
       (rid3-> {:text-anchor "middle"})
-      (.text #(<sub [::subs/node-name viz-id %2]))
+      (.text node-label-fn)
       (node-or-text-did-mount viz-id node-opts)))
 
 (defn link-text-did-mount

@@ -66,3 +66,16 @@
           (isa? h id :A) "red"
           (isa? h id :B) "blue"
           :default "green")))
+
+
+(reg-sub :node-labels?
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :node-config :show-labels])))
+
+(reg-sub :node-label
+  (fn [[_ viz-id i] _]
+    [(subscribe [:node-labels? viz-id])
+     (subscribe [::force-subs/get-node viz-id i])])
+  (fn [[show-labels node] _]
+    (when show-labels
+      (:name node))))

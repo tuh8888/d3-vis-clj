@@ -90,3 +90,8 @@
                              (set/difference all-roles)
                              (into roles)))))}))
 
+(reg-event-db :toggle-node-labels
+  [util/viz-id-interceptor trim-v rf/debug]
+  (fn [db []]
+    (update-in db [:node-config :show-labels] not)))
+

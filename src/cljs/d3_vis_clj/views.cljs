@@ -17,6 +17,14 @@
             :on-change #(>evt [::force-evts/resize-nodes viz-id
                                (util/text-value %)])}]])
 
+(defn node-labels-check-box
+  [viz-id]
+  [:div
+   [:input {:type      "checkbox"
+            :checked   #(<sub [:node-labels? viz-id])
+            :on-change #(>evt [:toggle-node-labels viz-id])}]
+   [:label "Display node labels"]])
+
 (defn add-node-btn
   [viz-id]
   [:div
@@ -32,12 +40,14 @@
   [:div
    [node-size-text-box viz-id]
    [add-node-btn viz-id]
+   [node-labels-check-box viz-id]
    [force-views/force-viz-graph viz-id
     {:node-opts {:ons       {:click #(if js/d3.event.ctrlKey
                                        (>evt [::force-evts/expand-node viz-id %2])
                                        (>evt [::force-evts/toggle-selected-node viz-id %2]))}
                  :fill-fn   #(<sub [:node-color viz-id %2])
-                 :stroke-fn #(<sub [::force-subs/node-outer-color viz-id %2])}}]])
+                 :stroke-fn #(<sub [::force-subs/node-outer-color viz-id %2])
+                 :label-fn  #(<sub [:node-label viz-id %2])}}]])
 
 (defn role-aggregation-row
   [viz-id]
