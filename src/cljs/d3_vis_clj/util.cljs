@@ -15,7 +15,7 @@
 (defn get-id [d]
   (gobj/get d "id"))
 
-(defn text-value
+(defn target-value
   "Returns value found in text field"
   [d]
   (-> d (.-target ) (.-value)))

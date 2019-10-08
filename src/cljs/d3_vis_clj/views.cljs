@@ -14,7 +14,7 @@
    [:input {:type      "text"
             :value     (<sub [::fses/node-size viz-id])
             :on-change #(>evt [::fses/resize-nodes viz-id
-                               (util/text-value %)])}]])
+                               (util/target-value %)])}]])
 
 (defn node-labels-check-box
   [viz-id]
@@ -43,7 +43,7 @@
    [:input {:type      "text"
             :value     (<sub [::fses/node-to-add viz-id])
             :on-change #(>evt [::fses/set-node-to-add viz-id
-                               (util/text-value %)])}]])
+                               (util/target-value %)])}]])
 (defn force-viz
   [viz-id]
   [:div
@@ -79,7 +79,7 @@
     [:div
      [:select
       {:on-change #(>evt [:set-visible-role viz-id
-                          (keyword (-> % .-target .-value)) i])
+                          (keyword (util/target-value %)) i])
        :value     role}
       (for [-role (<sub [:all-roles viz-id])]
         ^{:key (str (random-uuid))}
@@ -159,5 +159,5 @@
   [:div
    [:h1 (<sub [:name])]
    [:div
-    #_[mop-table :panel1]
+    [mop-table :panel1]
     [force-viz :force-viz1]]])
