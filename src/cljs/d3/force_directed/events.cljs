@@ -1,8 +1,5 @@
 (ns d3.force-directed.events
   (:require [re-frame.core :as rf :refer [reg-event-db reg-event-fx reg-fx
-                                          ->interceptor
-                                          get-coeffect assoc-coeffect
-                                          get-effect assoc-effect
                                           trim-v]]
             [d3-vis-clj.db :as db]
             [d3.force-directed.layout :as layout]

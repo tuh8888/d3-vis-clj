@@ -1,9 +1,5 @@
 (ns d3-vis-clj.events
-  (:require [re-frame.core :as rf :refer [reg-event-db reg-event-fx reg-fx
-                                          ->interceptor
-                                          get-coeffect assoc-coeffect
-                                          get-effect assoc-effect
-                                          trim-v]]
+  (:require [re-frame.core :as rf :refer [reg-event-db reg-event-fx trim-v]]
             [d3-vis-clj.db :as db]
             [clojure.set :as set]
             [d3-vis-clj.util :as util]))
@@ -31,16 +27,10 @@
                            (assoc-in [viz-id :height] init-height)
                            (assoc-in [viz-id :width] init-width))}))
 
-(defn toggle-contains
-  [coll x]
-  (if (contains? coll x)
-    (disj coll x)
-    (conj (or coll #{}) x)))
-
 (reg-event-db :toggle-selected-mop
   [util/viz-id-interceptor trim-v]
   (fn [db [id]]
-    (update-in db [:selected] #(toggle-contains % id))))
+    (update-in db [:selected] #(util/toggle-contains-set % id))))
 
 (reg-event-db :toggle-sort-role
   [util/viz-id-interceptor trim-v]
@@ -66,19 +56,11 @@
   (fn [db [viz-id]]
     (assoc-in db [viz-id :data] (vals (get-in db [:all-data :mops])))))
 
-(defn toggle-contains-vector
-  [coll x]
-  (if (some #(= x %) coll)
-    (->> coll
-         (remove #(= x %))
-         (vec))
-    (conj (or coll []) x)))
-
 (reg-event-db :toggle-visible-role
   [util/viz-id-interceptor trim-v]
   (fn [db [role]]
     (update-in db [:visible-roles]
-               #(toggle-contains-vector (or % []) role))))
+               #(util/toggle-contains-vector (or % []) role))))
 
 (reg-event-db :set-visible-role
   [util/viz-id-interceptor trim-v]

@@ -1,10 +1,9 @@
 (ns d3-vis-clj.util
   (:require [goog.object :as gobj]
-            [re-frame.core :refer [reg-event-db reg-event-fx reg-fx
-                                   ->interceptor
+            [re-frame.core :refer [->interceptor
                                    get-coeffect assoc-coeffect
-                                   get-effect assoc-effect
-                                   trim-v]]))
+                                   get-effect assoc-effect]]))
+
 
 (defn get-label
   [d]
@@ -67,3 +66,17 @@
                    (->> db
                         (assoc original-db viz-id)
                         (assoc-effect context' :db))))))))
+
+(defn toggle-contains-set
+  [coll x]
+  (if (contains? coll x)
+    (disj coll x)
+    (conj (or coll #{}) x)))
+
+(defn toggle-contains-vector
+  [coll x]
+  (if (some #(= x %) coll)
+    (->> coll
+         (remove #(= x %))
+         (vec))
+    (conj (or coll []) x)))
