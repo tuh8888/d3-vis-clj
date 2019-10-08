@@ -147,17 +147,21 @@
      :render-fn            (fn [fillers]
                              (str/join ", " fillers))}))
 
+(defn all-roles-check-box
+  [viz-id]
+  [:div
+   [:input
+    {:type      "checkbox"
+     :checked   (<sub [:all-roles-visible? viz-id])
+     :on-change #(>evt [:toggle-all-roles viz-id])}]
+   [:label "all"]])
+
 (defn role-selection
   [viz-id]
   (let [all-roles (<sub [:all-roles viz-id])]
     [:div
      "Select Roles "
-     [:div
-      [:input
-       {:type      "checkbox"
-        :checked   (every? #(<sub [:visible-role? viz-id %]) all-roles)
-        :on-change #(>evt [:toggle-all-roles viz-id])}]
-      [:label "all"]]
+     [all-roles-check-box viz-id]
      (doall
        (for [role all-roles]
          ^{:key (str (random-uuid))}

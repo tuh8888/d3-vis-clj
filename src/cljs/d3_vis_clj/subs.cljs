@@ -110,3 +110,8 @@
     (set (for [{:keys [slots]} (get-in db [viz-id :data])
                role (keys slots)]
            role))))
+(rf/reg-sub :all-roles-visible?
+  (fn [[_ viz-id] _]
+    [(rf/subscribe [:all-roles viz-id]) (rf/subscribe [:visible-roles viz-id])])
+  (fn [[all-roles visible-roles] _]
+    (every? (set visible-roles) all-roles)))
