@@ -2,7 +2,7 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as rf :refer [subscribe reg-sub
                                           reg-event-db reg-event-fx
-                                          trim-v]]
+                                          trim-v path]]
             [d3.force-directed.subs-evts :as fses]
             [d3-vis-clj.db :as db]
             [clojure.set :as set]
@@ -12,10 +12,14 @@
   (fn [_ _]
     db/default-db))
 
-(reg-sub :initial-data
+(reg-sub :initial-force-data
   (fn [_ [_ _]]
     db/default-force-data))
 
+(reg-event-db :init-mop-table
+  [trim-v (util/path-nth) (path [:data])]
+  (fn [_ _]
+    (vals (get-in db/example-mops [:mops]))))
 
 (reg-event-db :window-resized
   [trim-v]
@@ -41,9 +45,9 @@
     (:width db)))
 
 (reg-event-db :toggle-selected-mop
-  [trim-v (util/path-nth)]
+  [trim-v (util/path-nth) (path [:selected])]
   (fn [db [id]]
-    (update-in db [:selected] #(util/toggle-contains-set % id))))
+    (util/toggle-contains-set db id)))
 
 (reg-event-db :toggle-sort-role
   [trim-v (util/path-nth)]
@@ -74,21 +78,15 @@
   (fn [roles [_ _ role]]
     (contains? roles role)))
 
-(reg-event-db :init-mop-table
-  [trim-v]
-  (fn [db [viz-id]]
-    (assoc-in db [viz-id :data] (vals (get-in db [:all-data :mops])))))
-
 (reg-event-db :toggle-visible-role
-  [trim-v (util/path-nth)]
+  [trim-v (util/path-nth) (path [:visible-roles])]
   (fn [db [role]]
-    (update-in db [:visible-roles]
-               #(util/toggle-contains-vector (or % []) role))))
+    (util/toggle-contains-vector (or db []) role)))
 
 (reg-event-db :set-visible-role
-  [trim-v (util/path-nth)]
-  (fn [db [role i]]
-    (assoc-in db [:visible-roles i] role)))
+  [trim-v (util/path-nth) (path [:visible-roles]) (util/path-nth)]
+  (fn [_ [role]]
+    role))
 
 (reg-sub :visible-role?
   (fn [[_ viz-id] _]
@@ -97,9 +95,9 @@
     (some #(= role %) roles)))
 
 (reg-event-db :add-visible-role
-  [trim-v (util/path-nth)]
+  [trim-v (util/path-nth) (path [:visible-roles])]
   (fn [db [role]]
-    (update-in db [:visible-roles] #(conj (or % []) role))))
+    (conj (or db []) role)))
 
 (reg-sub :visible-roles
   (fn [db [_ viz-id]]
@@ -107,21 +105,19 @@
 
 (rf/reg-cofx :all-roles
   (fn [{[viz-id] :event :as coeffects}]
-    (assoc coeffects :all-roles @(rf/subscribe [:all-roles viz-id])
-                     :all-roles-visible? @(rf/subscribe [:all-roles-visible? viz-id]))))
+    (assoc coeffects
+      :all-roles @(rf/subscribe [:all-roles viz-id])
+      :all-roles-visible? @(rf/subscribe [:all-roles-visible? viz-id]))))
 
 (reg-event-fx :toggle-all-roles
-  [trim-v (rf/inject-cofx :all-roles)]
-  (fn [{:keys [all-roles db all-roles-visible?]}
-       [viz-id]]
-    {:db (update-in db [viz-id :visible-roles]
-                    (fn [roles]
-                      (if all-roles-visible?
-                        []
-                        (->> roles
-                             (set)
-                             (set/difference all-roles)
-                             (into roles)))))}))
+  [trim-v (rf/inject-cofx :all-roles) (util/path-nth) (path [:visible-roles])]
+  (fn [{:keys [all-roles roles all-roles-visible?]} _]
+    {:db (if all-roles-visible?
+           []
+           (->> roles
+                (set)
+                (set/difference all-roles)
+                (into roles)))}))
 
 (reg-sub :all-roles
   (fn [[_ viz-id] _]
@@ -134,13 +130,13 @@
 
 (reg-sub :all-roles-visible?
   (fn [[_ viz-id] _]
-    [(subscribe [:all-roles viz-id]) (subscribe [:visible-roles viz-id])])
+    [(subscribe [:all-roles viz-id])
+     (subscribe [:visible-roles viz-id])])
   (fn [[all-roles visible-roles] _]
     (every? (set visible-roles) all-roles)))
 
 (reg-event-db :toggle-node-labels
-  [trim-v (util/path-nth)
-   (rf/path [:node-config :show-labels])]
+  [trim-v (util/path-nth) (rf/path [:node-config :show-labels])]
   not)
 
 (reg-sub :node-labels?
@@ -158,8 +154,8 @@
       (:name node))))
 
 (reg-event-db :toggle-link-labels
-  (fn [db [_ viz-id]]
-    (update-in db [viz-id :link-config :show-labels] not)))
+  [trim-v (util/path-nth) (path [:link-config :show-labels])]
+  not)
 
 (reg-sub :link-labels?
   (fn [db [_ viz-id]]

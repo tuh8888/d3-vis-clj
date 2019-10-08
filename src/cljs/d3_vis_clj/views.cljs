@@ -71,7 +71,7 @@
                   :height       0.4
                   :zoom-fn      force-interaction/zoom
                   :drag-fn      force-interaction/drag
-                  :initial-data (<sub [:initial-data viz-id])}
+                  :initial-data (<sub [:initial-force-data viz-id])}
       :node-opts {:ons      {:click #(if js/d3.event.ctrlKey
                                        (>evt [::fses/expand-node viz-id %2])
                                        (>evt [::fses/toggle-selected-node viz-id %2]))}
@@ -93,8 +93,8 @@
   (fn [_]
     [:div
      [:select
-      {:on-change #(>evt [:set-visible-role viz-id
-                          (keyword (util/target-value %)) i])
+      {:on-change #(>evt [:set-visible-role viz-id i
+                          (keyword (util/target-value %))])
        :value     role}
       (for [-role (<sub [:all-roles viz-id])]
         ^{:key (str (random-uuid))}
