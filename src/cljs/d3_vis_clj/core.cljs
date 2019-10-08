@@ -1,8 +1,7 @@
 (ns d3-vis-clj.core
   (:require [reagent.core :as reagent]
             [re-frame.core :as rf]
-            [d3-vis-clj.events]
-            [d3-vis-clj.subs]
+            [d3-vis-clj.subs-evts]
             [d3-vis-clj.views :as views]
             [d3-vis-clj.config :as config]
             [district0x.re-frame.window-fx]))
