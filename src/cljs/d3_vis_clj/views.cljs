@@ -95,9 +95,7 @@
    [force-viz-graph viz-id]])
 
 (defn data-table
-  [viz-id data-sub col-defs
-   {:keys [header
-           row-options]}]
+  [data-sub col-defs {:keys [header row-options]}]
   [:table.ui.table
    [:thead
     header
@@ -151,20 +149,27 @@
 
 (defn role-selection
   [viz-id]
-  [:div
-   "Select Roles "
-   (doall
-     (for [role (<sub [:all-roles viz-id])]
-       ^{:key (str (random-uuid))}
-       [:div
-        [:input
-         {:type      "checkbox"
-          :checked   (<sub [:visible-role? viz-id role])
-          :on-change #(>evt [:toggle-visible-role viz-id role])}]
-        [:label role
-         [:button
-          {:on-click #(>evt [:add-visible-role viz-id role])}
-          "+"]]]))])
+  (let [all-roles (<sub [:all-roles viz-id])]
+    [:div
+     "Select Roles "
+     [:div
+      [:input
+       {:type      "checkbox"
+        :checked   (every? #(<sub [:visible-role? viz-id %]) all-roles)
+        :on-change #(>evt [:toggle-all-roles viz-id])}]
+      [:label "all"]]
+     (doall
+       (for [role all-roles]
+         ^{:key (str (random-uuid))}
+         [:div
+          [:input
+           {:type      "checkbox"
+            :checked   (<sub [:visible-role? viz-id role])
+            :on-change #(>evt [:toggle-visible-role viz-id role])}]
+          [:label role
+           [:button
+            {:on-click #(>evt [:add-visible-role viz-id role])}
+            "+"]]]))]))
 
 (defn mop-table
   "Table for displaying mop data"
@@ -177,7 +182,6 @@
        [role-selection viz-id]]
       [:td
        [data-table
-        viz-id
         [:visible-mops viz-id]
         (into [{:col-key [:id]}
                {:col-key [:name]}]
@@ -185,6 +189,7 @@
         {:header      (role-aggregation-row viz-id)
          :row-options (fn [id]
                         {:on-click #(>evt [:toggle-selected-mop viz-id id])
+                         :style    {:fill "blue"}
                          :class    [(when (<sub [:selected-mop? viz-id id])
                                       "selected")]})}]]]]]])
 
