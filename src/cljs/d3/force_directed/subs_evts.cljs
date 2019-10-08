@@ -8,26 +8,26 @@
 
 (reg-event-fx ::init-force-viz
   [trim-v]
-  (fn [{:keys [db]} [viz-id]]
+  (fn [{:keys [db]} [viz-id opts]]
     {:db         (assoc db viz-id db/default-force-layout)
-     :dispatch-n (list [::initialize-viz-resize viz-id]
+     :dispatch-n (list [::initialize-viz-resize viz-id opts]
                        [::initialize-sim viz-id])}))
 
 (reg-event-fx ::initialize-viz-resize
   [trim-v]
-  (fn [_ [viz-id]]
+  (fn [_ [viz-id opts]]
     (let [init-width  js/window.innerWidth
           init-height js/window.innerHeight]
       (println init-width init-height)
-      {:window/on-resize {:dispatch [::viz-resize viz-id]}
-       :dispatch         [::viz-resize viz-id init-width init-height]})))
+      {:window/on-resize {:dispatch [::viz-resize viz-id opts]}
+       :dispatch         [::viz-resize viz-id opts init-width init-height]})))
 
 (reg-event-db ::viz-resize
   [trim-v]
-  (fn [db [viz-id new-width new-height]]
+  (fn [db [viz-id {:keys [width height]} new-width new-height]]
     (-> db
-        (assoc-in [viz-id :height] new-height)
-        (assoc-in [viz-id :width] new-width))))
+        (assoc-in [viz-id :width] (* width new-width))
+        (assoc-in [viz-id :height] (* height new-height)))))
 
 (reg-sub ::height
   (fn [db [_ viz-id]]

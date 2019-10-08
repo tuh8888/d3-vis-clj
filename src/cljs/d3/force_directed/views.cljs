@@ -43,11 +43,11 @@
       (.text label-fn)))
 
 
-(defn force-viz-graph [viz-id {:keys [node-opts link-opts]}]
+(defn force-viz-graph [viz-id {:keys [svg-opts node-opts link-opts]}]
   [rid3/viz
    {:id     (str (name viz-id) "-graph")
     :ratom  (rf/subscribe [:common.subs/viz viz-id])
-    :svg    {:did-mount  #(rf/dispatch-sync [::ses/init-force-viz viz-id])
+    :svg    {:did-mount  #(rf/dispatch-sync [::ses/init-force-viz viz-id svg-opts])
              :did-update #(rid3-> %
                             {:width  (<sub [::ses/width viz-id])
                              :height (<sub [::ses/height viz-id])
