@@ -112,15 +112,15 @@
   (fn [db [_ viz-id i val]]
     (assoc-in db [viz-id :data :nodes i :hovered] val)))
 
+(defn toggle-contains
+  [coll x]
+  (if (contains? coll x)
+    (disj coll x)
+    (conj (or coll #{}) x)))
+
 (rf/reg-event-db :toggle-selected-mop
   (fn [db [_ viz-id id]]
-    (let [db (update-in db [viz-id :selected]
-                        (fn [selecteds]
-                          (if (contains? selecteds id)
-                            (disj selecteds id)
-                            (conj (or selecteds #{}) id))))]
-      (println (get-in db [viz-id :selected]))
-      db)))
+    (update-in db [viz-id :selected] #(toggle-contains % id))))
 
 (rf/reg-event-db :set-sort-key
   (fn [db [_ viz-id col-key rev?]]
@@ -137,4 +137,7 @@
   (fn [db [_ viz-id]]
     (assoc-in db [viz-id :data] (vals (get-in db [:all-data :mops])))))
 
+(rf/reg-event-db :toggle-visible-role
+  (fn [db [_ viz-id role]]
+    (update-in db [viz-id :visible-roles] #(toggle-contains % role))))
 

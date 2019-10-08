@@ -135,21 +135,41 @@
      :render-fn (fn [fillers]
                   (str/join ", " fillers))}))
 
+(defn role-selection
+  [viz-id]
+  [:div
+   "Select Roles "
+   (for [v (<sub [:all-roles viz-id])]
+     ^{:key (str "input" v)}
+     [:div
+      [:input
+       {:type      "checkbox"
+        :on-change #(>evt [:toggle-visible-role viz-id v])}]
+      v])])
+
+
 (defn mop-table
   "Table for displaying mop data"
   [viz-id]
   [:div
-   [data-table
-    viz-id
-    [:visible-mops viz-id]
-    (into [{:col-key [:id]}
-           {:col-key [:name]}]
-          (slot-cols viz-id))
-    {:header      (role-aggregation-row viz-id)
-     :row-options (fn [id]
-                    {:on-click #(>evt [:toggle-selected-mop viz-id id])
-                     :class    [(when (<sub [:selected-mop? viz-id id])
-                                  "selected")]})}]])
+   [:table
+    [:tbody
+     [:tr
+      [:td
+       [role-selection viz-id]]
+      [:td
+       [data-table
+        viz-id
+        [:visible-mops viz-id]
+        (into [{:col-key [:id]}
+               {:col-key [:name]}]
+              (slot-cols viz-id))
+        {:header      (role-aggregation-row viz-id)
+         :row-options (fn [id]
+                        {:on-click #(>evt [:toggle-selected-mop viz-id id])
+                         :class    [(when (<sub [:selected-mop? viz-id id])
+                                      "selected")]})}]]]]]])
+
 
 (defn main-panel []
   [:div

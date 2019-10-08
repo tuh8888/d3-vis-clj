@@ -90,8 +90,8 @@
     (:id mop)))
 
 (rf/reg-sub :visible-roles
-  (fn [_ _]
-    [:r1]))
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :visible-roles])))
 
 (rf/reg-sub :rev?
   (fn [db [_ viz-id col-key]]
@@ -100,3 +100,9 @@
 (rf/reg-sub :selected-mop?
   (fn [db [_ viz-id id]]
     (contains? (get-in db [viz-id :selected]) id)))
+
+(rf/reg-sub :all-roles
+  (fn [db [_ viz-id]]
+    (set (for [{:keys [slots]} (get-in db [viz-id :data])
+               role (keys slots)]
+           role))))
