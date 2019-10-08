@@ -80,8 +80,8 @@
                   :label-fn #(<sub [:node-label viz-id %2])}
       :link-opts {:label-fn #(<sub [:link-label viz-id %2])
                   :style    {:stroke-width 4
-                             :stroke       "#E5E5E5"}}}]]])
-
+                             :stroke       #(<sub [:link-stroke viz-id %2])}
+                  :ons      {:click #(>evt [::fses/toggle-selected-link viz-id %2])}}}]]])
 (defn role-aggregation-row
   [viz-id]
   [:tr

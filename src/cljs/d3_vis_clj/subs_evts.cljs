@@ -202,3 +202,11 @@
     (if (:selected node)
       "red"
       "white")))
+
+(reg-sub :link-stroke
+  (fn [[_ viz-id i]]
+    (subscribe [::fses/link viz-id i]))
+  (fn [link _]
+    (if (:selected link)
+      "red"
+      "#E5E5E5")))

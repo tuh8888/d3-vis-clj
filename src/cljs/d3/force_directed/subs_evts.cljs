@@ -150,9 +150,12 @@
   not)
 
 (reg-event-db ::toggle-selected-node
-  [trim-v (util/path-nth)]
-  (fn [db [i]]
-    (update-in db [:data :nodes i :selected] not)))
+  (conj path-node (path [:selected]))
+  not)
+
+(reg-event-db ::toggle-selected-link
+  (conj path-link (path [:selected]))
+  not)
 
 (reg-sub ::node-size
   (fn [db [_ viz-id]]

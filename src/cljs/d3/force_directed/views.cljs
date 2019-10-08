@@ -5,15 +5,27 @@
             [d3.force-directed.subs-evts :as ses]
             [d3.force-directed.interaction :as force-interaction]))
 
-(defn link-did-mount
-  [node viz-id {:keys [ons style]}]
+(defn link-or-text-did-mount
+  [node viz-id {:keys [ons]}]
   (-> node
-      (rid3->
-        {:style style})
       (util/set-ons
         (merge {:mouseover #(>evt [::ses/toggle-hovered-link viz-id %2])
                 :mouseout  #(>evt [::ses/toggle-hovered-link viz-id %2])}
                ons))))
+
+(defn link-did-mount
+  [node viz-id {:keys [style] :as link-opts}]
+  (-> node
+      (rid3->
+        {:style style})
+      (link-or-text-did-mount viz-id link-opts)))
+
+(defn link-text-did-mount
+  [node viz-id {:keys [label-fn] :as link-opts}]
+  (-> node
+      (rid3-> {:text-anchor "middle"})
+      (.text label-fn)
+      (link-or-text-did-mount viz-id link-opts)))
 
 (defn node-or-text-did-mount
   [node viz-id {:keys [ons]}]
@@ -38,12 +50,6 @@
       (rid3-> {:text-anchor "middle"})
       (.text label-fn)
       (node-or-text-did-mount viz-id node-opts)))
-
-(defn link-text-did-mount
-  [node _ {:keys [label-fn]}]
-  (-> node
-      (rid3-> {:text-anchor "middle"})
-      (.text label-fn)))
 
 (defn force-viz-graph [viz-id {:keys                                    [svg-opts node-opts link-opts]
                                {:keys [zoom-fn]
