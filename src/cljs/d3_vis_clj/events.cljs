@@ -157,3 +157,6 @@
   (fn [db [_ viz-id role i]]
     (assoc-in db [viz-id :visible-roles i] role)))
 
+(rf/reg-event-db :add-visible-role
+  (fn [db [_ viz-id role]]
+    (update-in db [viz-id :visible-roles] #(conj (or % []) role))))

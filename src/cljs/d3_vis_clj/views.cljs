@@ -161,7 +161,10 @@
          {:type      "checkbox"
           :checked   (<sub [:visible-role? viz-id role])
           :on-change #(>evt [:toggle-visible-role viz-id role])}]
-        role]))])
+        [:label role
+         [:button
+          {:on-click #(>evt [:add-visible-role viz-id role])}
+          "+"]]]))])
 
 (defn mop-table
   "Table for displaying mop data"
@@ -184,7 +187,6 @@
                         {:on-click #(>evt [:toggle-selected-mop viz-id id])
                          :class    [(when (<sub [:selected-mop? viz-id id])
                                       "selected")]})}]]]]]])
-
 
 (defn main-panel []
   [:div
