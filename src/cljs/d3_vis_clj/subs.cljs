@@ -81,23 +81,13 @@
   (fn [db [_ viz-id]]
     (get-in db [viz-id :data])))
 
-(rf/reg-sub :selected-mop
+(rf/reg-sub :selected-mops
   (fn [db [_ viz-id]]
     (get-in db [viz-id :selected])))
 
 (rf/reg-sub :mop-id
   (fn [_ [_ mop]]
     (:id mop)))
-
-(rf/reg-sub :panel-item-color
-  (fn [[_ viz-id mop] _]
-    (println mop)
-    [(rf/subscribe [:mop-id mop]) (rf/subscribe [:selected-mop viz-id])])
-
-  (fn [[id selected-id] _]
-    (if (= id selected-id)
-      "blue"
-      "red")))
 
 (rf/reg-sub :visible-roles
   (fn [_ _]

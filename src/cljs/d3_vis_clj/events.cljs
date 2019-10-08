@@ -112,9 +112,15 @@
   (fn [db [_ viz-id i val]]
     (assoc-in db [viz-id :data :nodes i :hovered] val)))
 
-(rf/reg-event-db :set-selected-mop
-  (fn [db [_ viz-id {:keys [id]}]]
-    (assoc-in db [viz-id :selected] id)))
+(rf/reg-event-db :toggle-selected-mop
+  (fn [db [_ viz-id id]]
+    (let [db (update-in db [viz-id :selected]
+                        (fn [selecteds]
+                          (if (contains? selecteds id)
+                            (disj selecteds id)
+                            (conj (or selecteds #{}) id))))]
+      (println (get-in db [viz-id :selected]))
+      db)))
 
 (rf/reg-event-db :set-sort-key
   (fn [db [_ viz-id col-key rev?]]

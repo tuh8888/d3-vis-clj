@@ -87,7 +87,6 @@
             :value     (<sub [:node-to-add viz-id])
             :on-change #(>evt [:set-node-to-add viz-id
                                (util/text-value %)])}]])
-
 (defn force-viz
   [viz-id]
   [:div
@@ -95,44 +94,60 @@
    [add-node-btn viz-id]
    [force-viz-graph viz-id]])
 
+(defn data-table
+  [viz-id data-sub col-defs
+   {:keys [additional-header-row
+           on-row-click]}]
+  [:table.ui.table
+   [:thead
+    additional-header-row
+    [:tr
+     (for [{:keys [col-key]} col-defs]
+       ^{:key (str col-key)}
+       [:th
+        {:on-click #(>evt [:set-sort-key viz-id col-key
+                           (<sub [:rev? viz-id col-key])])}
+        (last col-key)])]]
+   [:tbody
+    (for [{:keys [id] :as item} (<sub data-sub)]
+      ^{:key id}
+      [:tr
+       {:on-click #(on-row-click id)}
+       (for [{:keys [col-key render-fn]} col-defs]
+         (let [val (get-in item col-key)]
+           ^{:key (str id "-" col-key)}
+           [:td
+            (if render-fn
+              (render-fn val)
+              val)]))])]])
+
 (defn role-aggregation-row
   [viz-id]
   [:tr
-   [:th {:col-span 3} ""]
+   [:th {:col-span 2} ""]
    [:th {:col-span (count (<sub [:visible-roles viz-id]))} "Roles"]])
 
-(defn css-class-str [classes]
-  {:class (->> classes
-               (filter (complement nil?))
-               (clojure.string/join \space))})
+(defn slot-cols
+  [viz-id]
+  (for [role (<sub [:visible-roles viz-id])]
+    {:col-key   [:slots role]
+     :render-fn (fn [fillers]
+                  (str/join ", " fillers))}))
 
 (defn mop-table
+  "Table for displaying mop data"
   [viz-id]
   (rf/dispatch-sync [:init-mop-table viz-id])
   (fn []
-    (let [col-defs [{:col-key [:id]}
-                    {:col-key [:name]}]]
-      [:table.ui.table
-       [:thead
-        [:tr
-         (for [{:keys [col-key]} col-defs]
-           ^{:key (str col-key)}
-           [:th
-            {:on-click #(>evt [:set-sort-key viz-id col-key
-                               (<sub [:rev? viz-id col-key])])}
-            (last col-key)])]]
-
-       [:tbody
-        (for [{:keys [id] :as item} (<sub [:visible-mops viz-id])]
-          ^{:key id}
-          [:tr
-           (for [{:keys [col-key render-fn]} col-defs]
-             (let [val (get-in item col-key)]
-               ^{:key (str id "-" col-key)}
-               [:td
-                (if render-fn
-                  (render-fn val)
-                  val)]))])]])))
+    [:div
+     [data-table
+      viz-id
+      [:visible-mops viz-id]
+      (into [{:col-key [:id]}
+             {:col-key [:name]}]
+            (slot-cols viz-id))
+      {:additional-header-row (role-aggregation-row viz-id)
+       :on-row-click          (fn [id] (>evt [:toggle-selected-mop viz-id id]))}]]))
 
 (defn main-panel []
   [:div
