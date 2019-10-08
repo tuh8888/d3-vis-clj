@@ -197,4 +197,4 @@
   [:div
    [:h1 (<sub [:name])]
    [mop-table :panel1]
-   #_[force-viz :force-viz1]])
+   [force-viz :force-viz1]])

@@ -3,6 +3,40 @@
             [d3-vis-clj.db :as db]
             [d3.force-directed.layout :as layout]))
 
+(defn remove-nth
+  [v n]
+  (concat (subvec v 0 n) (subvec v (inc n))))
+
+(def viz-id-interceptor
+  (let [db-store-key     :re-frame-path/db-store
+        viz-id-store-key :viz-id-store]
+    (rf/->interceptor
+      :id :viz-id-path
+      :before (fn [context]
+                (let [original-db (rf/get-coeffect context :db)
+                      viz-id      (get-in context [:coeffects :event 1])
+                      new-db      (get original-db viz-id)]
+                  (-> context
+                      (update-in [:coeffects :event] remove-nth 1)
+                      (update db-store-key conj original-db)
+                      (assoc viz-id-store-key viz-id)
+                      (rf/assoc-coeffect :db new-db))))
+
+      :after (fn [context]
+               (let [db-store     (get context db-store-key)
+                     original-db  (peek db-store)
+                     new-db-store (pop db-store)
+                     viz-id       (get context viz-id-store-key)
+                     context'     (-> context
+                                      (assoc db-store-key new-db-store)
+                                      (rf/assoc-coeffect :db original-db)) ;; put the original db back so that things like debug work later on
+                     db           (rf/get-effect context :db ::not-found)]
+                 (if (= db ::not-found)
+                   context'
+                   (->> db
+                        (assoc original-db viz-id)
+                        (rf/assoc-effect context' :db))))))))
+
 (rf/reg-event-db :initialize-db
   (fn [_ _]
     db/default-db))
@@ -32,20 +66,24 @@
                        [:initialize-sim viz-id])}))
 
 (rf/reg-event-db :set-node-elems
-  (fn [db [_ viz-id elems]]
-    (assoc-in db [viz-id :elems :node] elems)))
+  [viz-id-interceptor]
+  (fn [db [_ elems]]
+    (assoc-in db [:elems :node] elems)))
 
 (rf/reg-event-db :set-link-elems
-  (fn [db [_ viz-id elems]]
-    (assoc-in db [viz-id :elems :link] elems)))
+  [viz-id-interceptor]
+  (fn [db [_ elems]]
+    (assoc-in db [:elems :link] elems)))
 
 (rf/reg-event-db :set-text-elems
-  (fn [db [_ viz-id elems]]
-    (assoc-in db [viz-id :elems :text] elems)))
+  [viz-id-interceptor]
+  (fn [db [_ elems]]
+    (assoc-in db [:elems :text] elems)))
 
 (rf/reg-event-db :resize-nodes
-  (fn [db [_ viz-id size]]
-    (assoc-in db [viz-id :node-config :r] size)))
+  [viz-id-interceptor]
+  (fn [db [_ size]]
+    (assoc-in db [:node-config :r] size)))
 
 (rf/reg-event-db :initialize-sim
   (fn [db [_ viz-id]]
@@ -53,8 +91,9 @@
             (layout/new-sim (rf/subscribe [:force-layout viz-id])))))
 
 (rf/reg-event-db :set-node-to-add
-  (fn [db [_ viz-id node-id]]
-    (assoc-in db [viz-id :node-to-add] (keyword node-id))))
+  [viz-id-interceptor]
+  (fn [db [_ node-id]]
+    (assoc-in db [:node-to-add] (keyword node-id))))
 
 (rf/reg-event-fx :add-node
   (fn [{:keys [db]} [_ viz-id]]
@@ -109,8 +148,9 @@
     (layout/restart config :nodes nodes :links links)))
 
 (rf/reg-event-db :set-hovered
-  (fn [db [_ viz-id i val]]
-    (assoc-in db [viz-id :data :nodes i :hovered] val)))
+  [viz-id-interceptor]
+  (fn [db [_ i val]]
+    (assoc-in db [:data :nodes i :hovered] val)))
 
 (defn toggle-contains
   [coll x]
@@ -119,14 +159,16 @@
     (conj (or coll #{}) x)))
 
 (rf/reg-event-db :toggle-selected-mop
-  (fn [db [_ viz-id id]]
-    (update-in db [viz-id :selected] #(toggle-contains % id))))
+  [viz-id-interceptor]
+  (fn [db [_ id]]
+    (update-in db [:selected] #(toggle-contains % id))))
 
 (rf/reg-event-db :set-sort-key
-  (fn [db [_ viz-id col-key rev?]]
+  [viz-id-interceptor]
+  (fn [db [_ col-key rev?]]
     (-> db
-        (assoc-in [viz-id :reversed-col] (when-not rev? col-key))
-        (update-in [viz-id :data]
+        (assoc-in [:reversed-col] (when-not rev? col-key))
+        (update-in [:data]
                    (fn [data]
                      (let [data (sort-by #(let [v get-in % col-key]
                                             (if (coll? v)
@@ -150,47 +192,14 @@
     (conj (or coll []) x)))
 
 (rf/reg-event-db :toggle-visible-role
-  (fn [db [_ viz-id role]]
-    (update-in db [viz-id :visible-roles] #(toggle-contains-vector (or % []) role))))
+  [viz-id-interceptor]
+  (fn [db [_ role]]
+    (update-in db [:visible-roles] #(toggle-contains-vector (or % []) role))))
 
 (rf/reg-event-db :set-visible-role
-  (fn [db [_ viz-id role i]]
-    (assoc-in db [viz-id :visible-roles i] role)))
-
-(defn remove-nth
-  [v n]
-  (concat (subvec v 0 n) (subvec v (inc n))))
-
-(def viz-id-interceptor
-  (let [db-store-key     :re-frame-path/db-store
-        viz-id-store-key :viz-id-store]
-    (rf/->interceptor
-      :id :viz-id-path
-      :before (fn [context]
-                (let [original-db (rf/get-coeffect context :db)
-                      viz-id      (get-in context [:coeffects :event 1])
-                      new-db      (get original-db viz-id)]
-                  (-> context
-                      (update-in [:coeffects :event] remove-nth 1)
-                      (update db-store-key conj original-db)
-                      (assoc viz-id-store-key viz-id)
-                      (rf/assoc-coeffect :db new-db))))
-
-      :after (fn [context]
-               (let [db-store     (get context db-store-key)
-                     original-db  (peek db-store)
-                     new-db-store (pop db-store)
-                     viz-id       (get context viz-id-store-key)
-                     context'     (-> context
-                                      (assoc db-store-key new-db-store)
-                                      (rf/assoc-coeffect :db original-db)) ;; put the original db back so that things like debug work later on
-                     db           (rf/get-effect context :db ::not-found)]
-                 (if (= db ::not-found)
-                   context'
-                   (->> db
-                        (assoc original-db viz-id)
-                        (rf/assoc-effect context' :db))))))))
-
+  [viz-id-interceptor]
+  (fn [db [_ role i]]
+    (assoc-in db [:visible-roles i] role)))
 
 (rf/reg-event-db :add-visible-role
   [viz-id-interceptor]
