@@ -157,6 +157,46 @@
   (fn [db [_ viz-id role i]]
     (assoc-in db [viz-id :visible-roles i] role)))
 
+(defn remove-nth
+  [v n]
+  (concat (subvec v 0 n) (subvec v (inc n))))
+
+(def viz-id-interceptor
+  (let [db-store-key     :re-frame-path/db-store
+        viz-id-store-key :viz-id-store]
+    (rf/->interceptor
+      :id :viz-id-path
+      :before (fn [context]
+                (let [original-db (rf/get-coeffect context :db)
+                      viz-id      (get-in context [:coeffects :event 1])
+                      new-db      (get original-db viz-id)]
+                  (-> context
+                      (update-in [:coeffects :event] remove-nth 1)
+                      (update db-store-key conj original-db)
+                      (assoc viz-id-store-key viz-id)
+                      (rf/assoc-coeffect :db new-db))))
+
+      :after (fn [context]
+               (let [db-store     (get context db-store-key)
+                     original-db  (peek db-store)
+                     new-db-store (pop db-store)
+                     viz-id       (get context viz-id-store-key)
+                     context'     (-> context
+                                      (assoc db-store-key new-db-store)
+                                      (rf/assoc-coeffect :db original-db)) ;; put the original db back so that things like debug work later on
+                     db           (rf/get-effect context :db ::not-found)]
+                 (if (= db ::not-found)
+                   context'
+                   (->> db
+                        (assoc original-db viz-id)
+                        (rf/assoc-effect context' :db))))))))
+
+
 (rf/reg-event-db :add-visible-role
-  (fn [db [_ viz-id role]]
-    (update-in db [viz-id :visible-roles] #(conj (or % []) role))))
+  [viz-id-interceptor]
+  (fn [db [_ role]]
+    (update-in db [:visible-roles] #(conj (or % []) role))))
+
+(rf/reg-event-db :toggle-all-roles
+  (fn [db [_ viz-id]]
+    db))
