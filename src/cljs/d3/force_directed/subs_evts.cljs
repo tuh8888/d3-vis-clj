@@ -8,8 +8,10 @@
 
 (reg-event-fx ::init-force-viz
   [trim-v]
-  (fn [{:keys [db]} [viz-id opts]]
-    {:db         (assoc db viz-id db/default-force-layout)
+  (fn [{:keys [db]} [viz-id node opts]]
+    {:db         (-> db
+                     (assoc viz-id db/default-force-layout)
+                     (assoc-in [viz-id :svg] node))
      :dispatch-n (list [::initialize-viz-resize viz-id opts]
                        [::initialize-sim viz-id])}))
 
@@ -18,7 +20,6 @@
   (fn [_ [viz-id opts]]
     (let [init-width  js/window.innerWidth
           init-height js/window.innerHeight]
-      (println init-width init-height)
       {:window/on-resize {:dispatch [::viz-resize viz-id opts]}
        :dispatch         [::viz-resize viz-id opts init-width init-height]})))
 
@@ -36,6 +37,10 @@
 (reg-sub ::width
   (fn [db [_ viz-id]]
     (get-in db [viz-id :width])))
+
+(reg-sub ::svg
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :svg])))
 
 (reg-event-db ::set-node-elems
   [util/viz-id-path trim-v]

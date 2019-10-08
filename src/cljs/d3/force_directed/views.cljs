@@ -2,7 +2,8 @@
   (:require [re-frame.core :as rf]
             [rid3.core :as rid3 :refer [rid3->]]
             [d3-vis-clj.util :as util :refer [<sub >evt]]
-            [d3.force-directed.subs-evts :as ses]))
+            [d3.force-directed.subs-evts :as ses]
+            [d3.force-directed.zoom :as zoom]))
 
 (defn link-did-mount
   [node viz-id _]
@@ -42,42 +43,49 @@
       (rid3-> {:text-anchor "middle"})
       (.text label-fn)))
 
-
 (defn force-viz-graph [viz-id {:keys [svg-opts node-opts link-opts]}]
   [rid3/viz
-   {:id     (str (name viz-id) "-graph")
-    :ratom  (rf/subscribe [:common.subs/viz viz-id])
-    :svg    {:did-mount  #(rf/dispatch-sync [::ses/init-force-viz viz-id svg-opts])
-             :did-update #(rid3-> %
-                            {:width  (<sub [::ses/width viz-id])
-                             :height (<sub [::ses/height viz-id])
-                             :style  {:background-color "grey"}})}
+   {:id             (str (name viz-id) "-graph")
+    :ratom          (rf/subscribe [:common.subs/viz viz-id])
+    :svg            {:did-mount  (fn [node _]
+                                   (rf/dispatch-sync [::ses/init-force-viz viz-id node svg-opts]))
 
-    :pieces [{:kind            :elem-with-data
-              :tag             "line"
-              :class           "link"
-              :did-mount       #(rf/dispatch-sync
-                                  [::ses/set-link-elems viz-id
-                                   (link-did-mount % viz-id link-opts)])
-              :prepare-dataset #(<sub [::ses/get-links-js viz-id])}
-             {:kind            :elem-with-data
-              :tag             "text"
-              :class           "link-text"
-              :did-mount       #(rf/dispatch-sync
-                                  [::ses/set-link-text-elems viz-id
-                                   (link-text-did-mount % viz-id link-opts)])
-              :prepare-dataset #(<sub [::ses/get-links-js viz-id])}
-             {:kind            :elem-with-data
-              :tag             "circle"
-              :class           "node"
-              :did-mount       #(rf/dispatch-sync
-                                  [::ses/set-node-elems viz-id
-                                   (node-did-mount % viz-id node-opts)])
-              :prepare-dataset #(<sub [::ses/get-nodes-js viz-id])}
-             {:kind            :elem-with-data
-              :tag             "text"
-              :class           "texts"
-              :did-mount       #(rf/dispatch-sync
-                                  [::ses/set-text-elems viz-id
-                                   (text-did-mount % viz-id node-opts)])
-              :prepare-dataset #(<sub [::ses/get-nodes-js viz-id])}]}])
+                     :did-update (fn [node _]
+                                   (rid3-> node
+                                     {:width  (<sub [::ses/width viz-id])
+                                      :height (<sub [::ses/height viz-id])
+                                      :style  {:background-color "grey"}}))}
+
+    :main-container {:did-mount  (fn [node _]
+                                   (.call (<sub [::ses/svg viz-id])
+                                          (zoom/zoom node)))
+                     :did-update #()}
+
+    :pieces         [{:kind            :elem-with-data
+                      :tag             "line"
+                      :class           "link"
+                      :did-mount       #(rf/dispatch-sync
+                                          [::ses/set-link-elems viz-id
+                                           (link-did-mount % viz-id link-opts)])
+                      :prepare-dataset #(<sub [::ses/get-links-js viz-id])}
+                     {:kind            :elem-with-data
+                      :tag             "text"
+                      :class           "link-text"
+                      :did-mount       #(rf/dispatch-sync
+                                          [::ses/set-link-text-elems viz-id
+                                           (link-text-did-mount % viz-id link-opts)])
+                      :prepare-dataset #(<sub [::ses/get-links-js viz-id])}
+                     {:kind            :elem-with-data
+                      :tag             "circle"
+                      :class           "node"
+                      :did-mount       #(rf/dispatch-sync
+                                          [::ses/set-node-elems viz-id
+                                           (node-did-mount % viz-id node-opts)])
+                      :prepare-dataset #(<sub [::ses/get-nodes-js viz-id])}
+                     {:kind            :elem-with-data
+                      :tag             "text"
+                      :class           "texts"
+                      :did-mount       #(rf/dispatch-sync
+                                          [::ses/set-text-elems viz-id
+                                           (text-did-mount % viz-id node-opts)])
+                      :prepare-dataset #(<sub [::ses/get-nodes-js viz-id])}]}])

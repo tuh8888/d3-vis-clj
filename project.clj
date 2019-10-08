@@ -22,7 +22,9 @@
                  ;; My deps
                  [cljsjs/d3 "5.12.0-0"]
                  [rid3 "0.2.1"]
-                 [district0x/re-frame-window-fx "1.0.2"]]
+                 [district0x/re-frame-window-fx "1.0.2"]
+                 [org.clojars.stumitchell/clairvoyant "0.2.1"]
+                 [day8/re-frame-tracer "0.1.1-SNAPSHOT"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-environ "1.1.0"]]

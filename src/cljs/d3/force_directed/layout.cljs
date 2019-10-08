@@ -126,4 +126,4 @@
               (-restart ratom))]
     {:sim     sim
      :restart (partial -restart sim ratom)
-     :drag    (drag/call-drag ratom)}))
+     :drag    (drag/drag ratom)}))

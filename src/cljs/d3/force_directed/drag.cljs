@@ -17,7 +17,7 @@
     (constrain-x! x)
     (constrain-y! y)))
 
-(defn call-drag
+(defn drag
   [ratom]
   (letfn [(started [_ i]
             (when-not (util/event-active?)
