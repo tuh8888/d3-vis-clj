@@ -175,23 +175,18 @@
   "Table for displaying mop data"
   [viz-id]
   [:div
-   [:table
-    [:tbody
-     [:tr
-      [:td
-       [role-selection viz-id]]
-      [:td
-       [data-table
-        [:visible-mops viz-id]
-        (into [{:col-key [:id]}
-               {:col-key [:name]}]
-              (slot-cols viz-id))
-        {:header      (role-aggregation-row viz-id)
-         :row-options (fn [id]
-                        {:on-click #(>evt [:toggle-selected-mop viz-id id])
-                         :style    {:fill "blue"}
-                         :class    [(when (<sub [:selected-mop? viz-id id])
-                                      "selected")]})}]]]]]])
+   [role-selection viz-id]
+   [data-table
+    [:visible-mops viz-id]
+    (into [{:col-key [:id]}
+           {:col-key [:name]}]
+          (slot-cols viz-id))
+    {:header      (role-aggregation-row viz-id)
+     :row-options (fn [id]
+                    {:on-click #(>evt [:toggle-selected-mop viz-id id])
+                     :style    {:fill "blue"}
+                     :class    [(when (<sub [:selected-mop? viz-id id])
+                                  "selected")]})}]])
 
 (defn main-panel []
   [:div
