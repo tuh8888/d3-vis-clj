@@ -40,11 +40,11 @@
 
 (rf/reg-sub :node-color
   (fn [[_ viz-id i] _]
-    (rf/subscribe [:get-node viz-id i]))
-  (fn [{:keys [id hovered]} _]
+    [(rf/subscribe [:hierarchy]) (rf/subscribe [:get-node viz-id i])])
+  (fn [[h {:keys [id hovered]}] _]
     (cond hovered "yellow"
-          (isa? @(rf/subscribe [:hierarchy]) id :A) "red"
-          (isa? @(rf/subscribe [:hierarchy]) id :B) "blue"
+          (isa? h id :A) "red"
+          (isa? h id :B) "blue"
           :default "green")))
 
 (rf/reg-sub :node-name
@@ -93,23 +93,37 @@
   (fn [db [_ viz-id]]
     (get-in db [viz-id :visible-roles])))
 
+(rf/reg-sub :reversed-col
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :reversed-col])))
+
 (rf/reg-sub :rev?
-  (fn [db [_ viz-id col-key]]
-    (= col-key (get-in db [viz-id :reversed-col]))))
+  (fn [[_ viz-id] _]
+    (rf/subscribe [:reversed-col viz-id]))
+  (fn [rev [_ _ col-key]]
+    (= col-key rev)))
 
 (rf/reg-sub :selected-mop?
-  (fn [db [_ viz-id id]]
-    (contains? (get-in db [viz-id :selected]) id)))
+  (fn [[_ viz-id] _]
+    (rf/subscribe [:selected-mops viz-id]))
+  (fn [selected-mops [_ _ id]]
+    (contains? selected-mops id)))
 
 (rf/reg-sub :visible-role?
-  (fn [db [_ viz-id role]]
-    (some #(= role %) (get-in db [viz-id :visible-roles]))))
+  (fn [[_ viz-id] _]
+    (rf/subscribe [:visible-roles viz-id]))
+  (fn [roles [_ _ role]]
+    (some #(= role %) roles)))
 
 (rf/reg-sub :all-roles
-  (fn [db [_ viz-id]]
-    (set (for [{:keys [slots]} (get-in db [viz-id :data])
-               role (keys slots)]
-           role))))
+  (fn [[_ viz-id] _]
+    (rf/subscribe [:visible-mops viz-id]))
+  (fn [mops _]
+    (->> mops
+         (map :slots)
+         (mapcat keys)
+         (set))))
+
 (rf/reg-sub :all-roles-visible?
   (fn [[_ viz-id] _]
     [(rf/subscribe [:all-roles viz-id]) (rf/subscribe [:visible-roles viz-id])])
