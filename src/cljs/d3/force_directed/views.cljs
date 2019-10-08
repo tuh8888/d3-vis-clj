@@ -13,7 +13,7 @@
        :stroke       stroke})))
 
 (defn node-or-text-did-mount
-  [node viz-id ons]
+  [node viz-id {:keys [ons]}]
   (-> node
       (.call (<sub [::subs/drag-fn viz-id]))
       (util/set-ons
@@ -22,20 +22,20 @@
                ons))))
 
 (defn node-did-mount
-  [node viz-id {:keys [ons]}]
+  [node viz-id {:keys [fill-fn] :as node-opts}]
   (-> node
       (rid3-> {:r    (<sub [::subs/node-size viz-id])
-               :fill #(<sub [::subs/node-color viz-id %2])})
-      (node-or-text-did-mount viz-id ons)))
+               :fill fill-fn})
+      (node-or-text-did-mount viz-id node-opts)))
 
 (defn text-did-mount
-  [node viz-id {:keys [ons]}]
+  [node viz-id node-opts]
   (-> node
       (rid3-> {:text-anchor "middle"})
       (.text #(<sub [::subs/node-name viz-id %2]))
-      (node-or-text-did-mount viz-id ons)))
+      (node-or-text-did-mount viz-id node-opts)))
 
-(defn force-viz-graph [viz-id {:keys [node]}]
+(defn force-viz-graph [viz-id {:keys [node-opts]}]
   [rid3/viz
    {:id     (str (name viz-id) "-graph")
     :ratom  (rf/subscribe [::subs/force-layout viz-id])
@@ -57,12 +57,12 @@
               :class           "node"
               :did-mount       #(rf/dispatch-sync
                                   [::evts/set-node-elems viz-id
-                                   (node-did-mount % viz-id node)])
+                                   (node-did-mount % viz-id node-opts)])
               :prepare-dataset #(<sub [::subs/get-nodes-js viz-id])}
              {:kind            :elem-with-data
               :tag             "text"
               :class           "texts"
               :did-mount       #(rf/dispatch-sync
                                   [::evts/set-text-elems viz-id
-                                   (text-did-mount % viz-id node)])
+                                   (text-did-mount % viz-id node-opts)])
               :prepare-dataset #(<sub [::subs/get-nodes-js viz-id])}]}])
