@@ -194,7 +194,9 @@
           :default "white")))
 
 (reg-sub :node-stroke
-  (fn [db [_ viz-id i]]
-    (if (get-in db [viz-id :data :nodes i :selected])
+  (fn [[_ viz-id i]]
+    (subscribe [::force-subs/get-node viz-id i]))
+  (fn [node _]
+    (if (:selected node)
       "red"
       "white")))
