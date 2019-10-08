@@ -101,6 +101,10 @@
   (fn [db [_ viz-id id]]
     (contains? (get-in db [viz-id :selected]) id)))
 
+(rf/reg-sub :visible-role?
+  (fn [db [_ viz-id role]]
+    (some #(= role %) (get-in db [viz-id :visible-roles]))))
+
 (rf/reg-sub :all-roles
   (fn [db [_ viz-id]]
     (set (for [{:keys [slots]} (get-in db [viz-id :data])

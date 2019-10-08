@@ -153,13 +153,15 @@
   [viz-id]
   [:div
    "Select Roles "
-   (for [v (<sub [:all-roles viz-id])]
-     ^{:key (str (random-uuid))}
-     [:div
-      [:input
-       {:type      "checkbox"
-        :on-change #(>evt [:toggle-visible-role viz-id v])}]
-      v])])
+   (doall
+     (for [role (<sub [:all-roles viz-id])]
+       ^{:key (str (random-uuid))}
+       [:div
+        [:input
+         {:type      "checkbox"
+          :checked   (<sub [:visible-role? viz-id role])
+          :on-change #(>evt [:toggle-visible-role viz-id role])}]
+        role]))])
 
 (defn mop-table
   "Table for displaying mop data"
