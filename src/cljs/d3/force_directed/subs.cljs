@@ -21,15 +21,9 @@
   (fn [db [_ viz-id i]]
     (get-in db [viz-id :data :links i])))
 
-(reg-sub ::selected-node
-  (fn [db [_ viz-id]]
-    (get-in db [viz-id :selected :node])))
-
 (reg-sub ::node-outer-color
-  (fn [[_ viz-id i] _]
-    [(subscribe [::selected-node viz-id]) (subscribe [::get-node viz-id i])])
-  (fn [[selected-node node] _]
-    (if (= (:id selected-node) (:id node))
+  (fn [db [_ viz-id i]]
+    (if (get-in db [viz-id :data :nodes i :selected])
       "black"
       "white")))
 

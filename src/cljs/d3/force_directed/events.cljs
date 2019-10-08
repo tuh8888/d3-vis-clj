@@ -110,7 +110,4 @@
 (reg-event-db ::toggle-selected-node
   [util/viz-id-interceptor trim-v]
   (fn [db [i]]
-    (let [node (get-in db [:data :nodes i])]
-      (update-in db [:selected :node] #(if (= (:id %) (:id node))
-                                         nil
-                                         node)))))
+    (update-in db [:data :nodes i :selected] not)))
