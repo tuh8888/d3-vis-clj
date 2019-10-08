@@ -6,16 +6,14 @@
             [d3.force-directed.interaction :as force-interaction]))
 
 (defn link-did-mount
-  [node viz-id {:keys [ons]}]
-  (let [{:keys [stroke-width stroke]} (<sub [::ses/link-config viz-id])]
-    (-> node
-        (rid3->
-          {:stroke-width stroke-width
-           :stroke       stroke})
-        (util/set-ons
-          (merge {:mouseover #(>evt [::ses/toggle-hovered-link viz-id %2])
-                  :mouseout  #(>evt [::ses/toggle-hovered-link viz-id %2])}
-                 ons)))))
+  [node viz-id {:keys [ons style]}]
+  (-> node
+      (rid3->
+        {:style style})
+      (util/set-ons
+        (merge {:mouseover #(>evt [::ses/toggle-hovered-link viz-id %2])
+                :mouseout  #(>evt [::ses/toggle-hovered-link viz-id %2])}
+               ons))))
 
 (defn node-or-text-did-mount
   [node viz-id {:keys [ons]}]
@@ -27,11 +25,10 @@
                ons))))
 
 (defn node-did-mount
-  [node viz-id {:keys [fill-fn stroke-fn] :as node-opts}]
+  [node viz-id {:keys [style] :as node-opts}]
   (-> node
-      (rid3-> {:r      (<sub [::ses/node-size viz-id])
-               :fill   fill-fn
-               :stroke stroke-fn})
+      (rid3-> {:r     (<sub [::ses/node-size viz-id])
+               :style style})
       (node-or-text-did-mount viz-id node-opts)))
 
 (defn text-did-mount

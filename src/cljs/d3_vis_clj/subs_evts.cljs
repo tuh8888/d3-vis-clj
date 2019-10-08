@@ -165,7 +165,8 @@
     [(subscribe [:link-labels? viz-id])
      (subscribe [::fses/link viz-id i])])
   (fn [[show-labels link] _]
-    (when show-labels
+    (when (or (:hovered link)
+              show-labels)
       (:label link))))
 
 (reg-sub :name

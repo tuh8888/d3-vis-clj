@@ -51,8 +51,6 @@
                    :link    {:distance 10
                              :strength :true}}
    :node-config   {:r 10}
-   :link-config   {:stroke-width 1
-                   :stroke       "#E5E5E5"}
    :data          {:nodes [(get-in example-mops [:mops :x1])]
                    :links []}})
 

@@ -62,13 +62,15 @@
                   :height  0.4
                   :zoom-fn force-interaction/zoom
                   :drag-fn force-interaction/drag}
-      :node-opts {:ons       {:click #(if js/d3.event.ctrlKey
-                                        (>evt [::fses/expand-node viz-id %2])
-                                        (>evt [::fses/toggle-selected-node viz-id %2]))}
-                  :fill-fn   #(<sub [:node-color viz-id %2])
-                  :stroke-fn #(<sub [:node-stroke viz-id %2])
-                  :label-fn  #(<sub [:node-label viz-id %2])}
-      :link-opts {:label-fn #(<sub [:link-label viz-id %2])}}]]])
+      :node-opts {:ons      {:click #(if js/d3.event.ctrlKey
+                                       (>evt [::fses/expand-node viz-id %2])
+                                       (>evt [::fses/toggle-selected-node viz-id %2]))}
+                  :style    {:fill   #(<sub [:node-color viz-id %2])
+                             :stroke #(<sub [:node-stroke viz-id %2])}
+                  :label-fn #(<sub [:node-label viz-id %2])}
+      :link-opts {:label-fn #(<sub [:link-label viz-id %2])
+                  :style    {:stroke-width 4
+                             :stroke       "#E5E5E5"}}}]]])
 
 (defn role-aggregation-row
   [viz-id]
