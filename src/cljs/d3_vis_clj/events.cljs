@@ -5,7 +5,7 @@
 
 (defn remove-nth
   [v n]
-  (concat (subvec v 0 n) (subvec v (inc n))))
+  (vec (concat (subvec v 0 n) (subvec v (inc n)))))
 
 (def viz-id-interceptor
   (let [db-store-key     :re-frame-path/db-store
@@ -42,7 +42,8 @@
     db/default-db))
 
 (rf/reg-event-db :window-resized
-  (fn [db [_ viz-id new-width new-height]]
+  [rf/trim-v]
+  (fn [db [viz-id new-width new-height]]
     (-> db
         (assoc-in [:height] new-height)
         (assoc-in [:width] new-width)
@@ -50,7 +51,8 @@
         (assoc-in [viz-id :width] new-width))))
 
 (rf/reg-event-fx :initialize-window-resize
-  (fn [{:keys [db]} [_ viz-id init-width init-height]]
+  [rf/trim-v]
+  (fn [{:keys [db]} [viz-id init-width init-height]]
     {:window/on-resize {:dispatch [:window-resized viz-id]}
      :db               (-> db
                            (assoc-in [:height] init-height)
@@ -59,44 +61,47 @@
                            (assoc-in [viz-id :width] init-width))}))
 
 (rf/reg-event-fx :init-force-viz
-  (fn [{:keys [db]} [_ viz-id]]
+  [rf/trim-v]
+  (fn [{:keys [db]} [viz-id]]
     {:db         (assoc db viz-id db/default-force-layout)
      :dispatch-n (list [:initialize-window-resize viz-id
                         js/window.innerWidth js/window.innerHeight]
                        [:initialize-sim viz-id])}))
 
 (rf/reg-event-db :set-node-elems
-  [viz-id-interceptor]
-  (fn [db [_ elems]]
+  [viz-id-interceptor rf/trim-v]
+  (fn [db [elems]]
     (assoc-in db [:elems :node] elems)))
 
 (rf/reg-event-db :set-link-elems
-  [viz-id-interceptor]
-  (fn [db [_ elems]]
+  [viz-id-interceptor rf/trim-v]
+  (fn [db [elems]]
     (assoc-in db [:elems :link] elems)))
 
 (rf/reg-event-db :set-text-elems
-  [viz-id-interceptor]
-  (fn [db [_ elems]]
+  [viz-id-interceptor rf/trim-v]
+  (fn [db [elems]]
     (assoc-in db [:elems :text] elems)))
 
 (rf/reg-event-db :resize-nodes
-  [viz-id-interceptor]
-  (fn [db [_ size]]
+  [viz-id-interceptor rf/trim-v]
+  (fn [db [size]]
     (assoc-in db [:node-config :r] size)))
 
 (rf/reg-event-db :initialize-sim
-  (fn [db [_ viz-id]]
+  [rf/trim-v]
+  (fn [db [viz-id]]
     (update db viz-id merge
             (layout/new-sim (rf/subscribe [:force-layout viz-id])))))
 
 (rf/reg-event-db :set-node-to-add
-  [viz-id-interceptor]
-  (fn [db [_ node-id]]
+  [viz-id-interceptor rf/trim-v]
+  (fn [db [node-id]]
     (assoc-in db [:node-to-add] (keyword node-id))))
 
 (rf/reg-event-fx :add-node
-  (fn [{:keys [db]} [_ viz-id]]
+  [rf/trim-v]
+  (fn [{:keys [db]} [viz-id]]
     (let [node-id  (get-in db [viz-id :node-to-add])
           new-node (get-in db [:all-data :mops node-id])]
       (when new-node
@@ -114,9 +119,9 @@
      :label    role
      :strength 0.1}))
 
-
 (rf/reg-event-fx :expand-node
-  (fn [{:keys [db]} [_ viz-id i]]
+  [rf/trim-v]
+  (fn [{:keys [db]} [viz-id i]]
     (let [{{{:keys [links nodes]} :data
             :as                   config} viz-id} db
           {{:keys [id slots]} i} nodes
@@ -148,8 +153,8 @@
     (layout/restart config :nodes nodes :links links)))
 
 (rf/reg-event-db :set-hovered
-  [viz-id-interceptor]
-  (fn [db [_ i val]]
+  [viz-id-interceptor rf/trim-v]
+  (fn [db [i val]]
     (assoc-in db [:data :nodes i :hovered] val)))
 
 (defn toggle-contains
@@ -159,13 +164,13 @@
     (conj (or coll #{}) x)))
 
 (rf/reg-event-db :toggle-selected-mop
-  [viz-id-interceptor]
-  (fn [db [_ id]]
+  [viz-id-interceptor rf/trim-v]
+  (fn [db [id]]
     (update-in db [:selected] #(toggle-contains % id))))
 
 (rf/reg-event-db :set-sort-key
-  [viz-id-interceptor]
-  (fn [db [_ col-key rev?]]
+  [viz-id-interceptor rf/trim-v]
+  (fn [db [col-key rev?]]
     (-> db
         (assoc-in [:reversed-col] (when-not rev? col-key))
         (update-in [:data]
@@ -180,7 +185,8 @@
                          (reverse data))))))))
 
 (rf/reg-event-db :init-mop-table
-  (fn [db [_ viz-id]]
+  [rf/trim-v]
+  (fn [db [viz-id]]
     (assoc-in db [viz-id :data] (vals (get-in db [:all-data :mops])))))
 
 (defn toggle-contains-vector
@@ -192,20 +198,21 @@
     (conj (or coll []) x)))
 
 (rf/reg-event-db :toggle-visible-role
-  [viz-id-interceptor]
-  (fn [db [_ role]]
+  [viz-id-interceptor rf/trim-v]
+  (fn [db [role]]
     (update-in db [:visible-roles] #(toggle-contains-vector (or % []) role))))
 
 (rf/reg-event-db :set-visible-role
-  [viz-id-interceptor]
-  (fn [db [_ role i]]
+  [viz-id-interceptor rf/trim-v]
+  (fn [db [role i]]
     (assoc-in db [:visible-roles i] role)))
 
 (rf/reg-event-db :add-visible-role
-  [viz-id-interceptor]
-  (fn [db [_ role]]
+  [viz-id-interceptor rf/trim-v]
+  (fn [db [role]]
     (update-in db [:visible-roles] #(conj (or % []) role))))
 
 (rf/reg-event-db :toggle-all-roles
-  (fn [db [_ viz-id]]
+  [viz-id-interceptor rf/trim-v]
+  (fn [db []]
     db))
