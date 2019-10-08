@@ -1,10 +1,6 @@
 (ns d3.force-directed.subs
   (:require [re-frame.core :refer [subscribe reg-sub]]))
 
-(reg-sub ::force-layout
-  (fn [db [_ viz-id]]
-    (get db viz-id)))
-
 (reg-sub ::node-size
   (fn [db [_ viz-id]]
     (get-in db [viz-id :node-config :r])))

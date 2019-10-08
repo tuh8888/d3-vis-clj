@@ -22,10 +22,6 @@
   (fn [db [_ viz-id]]
     (get-in db [viz-id :data])))
 
-(reg-sub :selected-mops
-  (fn [db [_ viz-id]]
-    (get-in db [viz-id :selected])))
-
 (reg-sub :mop-id
   (fn [_ [_ mop]]
     (:id mop)))
@@ -42,14 +38,7 @@
   (fn [[_ viz-id] _]
     (subscribe [:sorted-roles viz-id]))
   (fn [roles [_ _ role]]
-    (println roles)
     (contains? roles role)))
-
-(reg-sub :selected-mop?
-  (fn [[_ viz-id] _]
-    (subscribe [:selected-mops viz-id]))
-  (fn [selected-mops [_ _ id]]
-    (contains? selected-mops id)))
 
 (reg-sub :visible-role?
   (fn [[_ viz-id] _]

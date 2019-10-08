@@ -46,7 +46,7 @@
 (defn force-viz-graph [viz-id {:keys [node-opts]}]
   [rid3/viz
    {:id     (str (name viz-id) "-graph")
-    :ratom  (rf/subscribe [::subs/force-layout viz-id])
+    :ratom  (rf/subscribe [:common.subs/viz viz-id])
     :svg    {:did-mount  #(rf/dispatch-sync [::evts/init-force-viz viz-id])
              :did-update #(rid3-> %
                             {:width  (<sub [:window-width])

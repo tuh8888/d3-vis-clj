@@ -6,7 +6,6 @@
                                           trim-v]]
             [d3-vis-clj.db :as db]
             [d3.force-directed.layout :as layout]
-            [d3.force-directed.subs :as subs]
             [d3-vis-clj.util :as util]))
 
 (reg-event-fx ::init-force-viz
@@ -46,7 +45,7 @@
   [trim-v]
   (fn [db [viz-id]]
     (update db viz-id merge
-            (layout/new-sim (rf/subscribe [::subs/force-layout viz-id])))))
+            (layout/new-sim (rf/subscribe [:common.subs/viz viz-id])))))
 
 (reg-event-db ::set-node-to-add
   [util/viz-id-interceptor trim-v]

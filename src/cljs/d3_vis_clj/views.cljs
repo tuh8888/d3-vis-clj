@@ -1,9 +1,11 @@
 (ns d3-vis-clj.views
   (:require [cljsjs.d3]
             [d3-vis-clj.util :refer [<sub >evt] :as util]
+            [common.subs :as c-subs]
             [d3.force-directed.views :as force-views]
             [d3.force-directed.subs :as force-subs]
             [d3.force-directed.events :as force-evts]
+            [data-table.views :as dt-views]
             [clojure.string :as str]))
 
 (defn node-size-text-box
@@ -36,32 +38,6 @@
                                        (>evt [::force-evts/toggle-selected-node viz-id %2]))}
                  :fill-fn   #(<sub [::force-subs/node-color viz-id %2])
                  :stroke-fn #(<sub [::force-subs/node-outer-color viz-id %2])}}]])
-
-(defn data-table
-  [data-sub col-defs {:keys [header row-options]}]
-  [:table.ui.table
-   [:thead
-    header
-    [:tr
-     (doall
-       (for [{:keys [col-key col-header-render-fn
-                     col-header-options]
-              :or   {col-header-render-fn last}} col-defs]
-         ^{:key (str (random-uuid))}
-         [:th
-          col-header-options
-          (col-header-render-fn col-key)]))]]
-   [:tbody
-    (doall
-      (for [{:keys [id] :as item} (<sub data-sub)]
-        ^{:key (str (random-uuid))}
-        [:tr
-         (row-options id)
-         (for [{:keys [col-key render-fn]} col-defs
-               :let [val (get-in item col-key)]]
-           ^{:key (str (random-uuid))}
-           [:td
-            (if render-fn (render-fn val) val)])]))]])
 
 (defn role-aggregation-row
   [viz-id]
@@ -130,7 +106,7 @@
   [viz-id]
   [:div
    [role-selection viz-id]
-   [data-table
+   [dt-views/data-table
     [:visible-mops viz-id]
     (into [{:col-key [:id]}
            {:col-key [:name]}]
@@ -139,7 +115,7 @@
      :row-options (fn [id]
                     {:on-click #(>evt [:toggle-selected-mop viz-id id])
                      :style    {:fill "blue"}
-                     :class    [(when (<sub [:selected-mop? viz-id id])
+                     :class    [(when (<sub [::c-subs/selected? viz-id id])
                                   "selected")]})}]])
 
 (defn main-panel []
