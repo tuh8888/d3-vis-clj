@@ -45,18 +45,27 @@
             :value     (<sub [::fses/node-to-add viz-id])
             :on-change #(>evt [::fses/set-node-to-add viz-id
                                (util/target-value %)])}]])
+
+(defn flex-div
+  [width height left right]
+  [:div {:style {:display "flex"}}
+   [:div {:style {:width    width
+                  :height   height
+                  :overflow "scroll"}}
+    left]
+   [:div {:style {:flex-grow "1"
+                  :height    height
+                  :overflow  "scroll"}}
+    right]])
 (defn force-viz
   [viz-id]
-  [:div
-   {:style {:display "flex"}}
+  [flex-div "10%" "40%"
    [:div
-    {:style {:width "10%"}}
     [node-size-text-box viz-id]
     [add-node-btn viz-id]
     [node-labels-check-box viz-id]
     [link-labels-check-box viz-id]]
    [:div
-    {:style {:flex-grow "1"}}
     [force-views/force-viz-graph viz-id
      {:svg-opts  {:width        0.9
                   :height       0.4
@@ -120,7 +129,7 @@
   [viz-id]
   (let [all-roles (<sub [:all-roles viz-id])]
     [:div
-     "Select Roles "
+     [:h3 "Select Roles "]
      [all-roles-check-box viz-id]
      (doall
        (for [role all-roles]
@@ -138,28 +147,19 @@
 (defn mop-table
   "Table for displaying mop data"
   [viz-id]
-  [:div
-   {:style {:display "flex"}}
-   [:div
-    {:style {:width    "10%"
-             :height   "50vh"
-             :overflow "scroll"}}
-    [role-selection viz-id]]
-   [:div
-    {:style {:flex-grow "1"
-             :height    "50vh"
-             :overflow  "scroll"}}
-    [dt-views/data-table
-     [:visible-mops viz-id]
-     (into [{:col-key [:id]}
-            {:col-key [:name]}]
-           (slot-cols viz-id))
-     {:header      (role-aggregation-row viz-id)
-      :row-options (fn [id]
-                     {:on-click #(>evt [:toggle-selected-mop viz-id id])
-                      :style    {:fill "blue"}
-                      :class    [(when (<sub [::c-subs/selected? viz-id id])
-                                   "selected")]})}]]])
+  [flex-div "10%" "50vh"
+   [role-selection viz-id]
+   [dt-views/data-table
+    [:visible-mops viz-id]
+    (into [{:col-key [:id]}
+           {:col-key [:name]}]
+          (slot-cols viz-id))
+    {:header      (role-aggregation-row viz-id)
+     :row-options (fn [id]
+                    {:on-click #(>evt [:toggle-selected-mop viz-id id])
+                     :style    {:fill "blue"}
+                     :class    [(when (<sub [::c-subs/selected? viz-id id])
+                                  "selected")]})}]])
 
 (defn main-panel []
   [:div
