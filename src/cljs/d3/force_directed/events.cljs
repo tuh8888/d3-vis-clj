@@ -14,27 +14,27 @@
                        [::initialize-sim viz-id])}))
 
 (reg-event-db ::set-node-elems
-  [util/viz-id-interceptor trim-v]
+  [util/viz-id-path trim-v]
   (fn [db [elems]]
     (assoc-in db [:elems :node] elems)))
 
 (reg-event-db ::set-link-elems
-  [util/viz-id-interceptor trim-v]
+  [util/viz-id-path trim-v]
   (fn [db [elems]]
     (assoc-in db [:elems :link] elems)))
 
 (reg-event-db ::set-link-text-elems
-  [util/viz-id-interceptor trim-v]
+  [util/viz-id-path trim-v]
   (fn [db [elems]]
     (assoc-in db [:elems :link-text] elems)))
 
 (reg-event-db ::set-text-elems
-  [util/viz-id-interceptor trim-v]
+  [util/viz-id-path trim-v]
   (fn [db [elems]]
     (assoc-in db [:elems :text] elems)))
 
 (reg-event-db ::resize-nodes
-  [util/viz-id-interceptor trim-v]
+  [util/viz-id-path trim-v]
   (fn [db [size]]
     (assoc-in db [:node-config :r] size)))
 
@@ -45,7 +45,7 @@
             (layout/new-sim (rf/subscribe [:common.subs/viz viz-id])))))
 
 (reg-event-db ::set-node-to-add
-  [util/viz-id-interceptor trim-v]
+  [util/viz-id-path trim-v]
   (fn [db [node-id]]
     (assoc-in db [:node-to-add] (keyword node-id))))
 
@@ -103,11 +103,11 @@
     (layout/restart config :nodes nodes :links links)))
 
 (reg-event-db ::set-hovered
-  [util/viz-id-interceptor trim-v]
+  [util/viz-id-path trim-v]
   (fn [db [i val]]
     (assoc-in db [:data :nodes i :hovered] val)))
 
 (reg-event-db ::toggle-selected-node
-  [util/viz-id-interceptor trim-v]
+  [util/viz-id-path trim-v]
   (fn [db [i]]
     (update-in db [:data :nodes i :selected] not)))

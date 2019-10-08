@@ -37,7 +37,7 @@
       (concat (subvec v (inc n)))
       (vec)))
 
-(def viz-id-interceptor
+(def viz-id-path
   (let [db-store-key     :re-frame-path/db-store
         viz-id-store-key :viz-id-store]
     (->interceptor
