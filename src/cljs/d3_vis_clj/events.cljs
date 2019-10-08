@@ -5,7 +5,8 @@
                                           get-effect assoc-effect
                                           trim-v]]
             [d3-vis-clj.db :as db]
-            [d3.force-directed.layout :as layout]))
+            [d3.force-directed.layout :as layout]
+            [clojure.set :as set]))
 
 (defn remove-nth
   [v n]
@@ -219,7 +220,22 @@
   (fn [db [role]]
     (update-in db [:visible-roles] #(conj (or % []) role))))
 
-(reg-event-db :toggle-all-roles
-  [viz-id-interceptor trim-v]
-  (fn [db []]
-    db))
+(rf/reg-cofx
+  :all-roles
+  (fn [{[viz-id] :event :as coeffects}]
+    (assoc coeffects :all-roles @(rf/subscribe [:all-roles viz-id])
+                     :all-roles-visible? @(rf/subscribe [:all-roles-visible? viz-id]))))
+
+(reg-event-fx :toggle-all-roles
+  [trim-v (rf/inject-cofx :all-roles)]
+  (fn [{:keys [all-roles db all-roles-visible?]}
+       [viz-id]]
+    {:db (update-in db [viz-id :visible-roles]
+                    (fn [roles]
+                      (if all-roles-visible?
+                        []
+                        (->> roles
+                             (set)
+                             (set/difference all-roles)
+                             (into roles)))))}))
+
