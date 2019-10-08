@@ -22,10 +22,11 @@
                ons))))
 
 (defn node-did-mount
-  [node viz-id {:keys [fill-fn] :as node-opts}]
+  [node viz-id {:keys [fill-fn stroke-fn] :as node-opts}]
   (-> node
-      (rid3-> {:r    (<sub [::subs/node-size viz-id])
-               :fill fill-fn})
+      (rid3-> {:r      (<sub [::subs/node-size viz-id])
+               :fill   fill-fn
+               :stroke stroke-fn})
       (node-or-text-did-mount viz-id node-opts)))
 
 (defn text-did-mount

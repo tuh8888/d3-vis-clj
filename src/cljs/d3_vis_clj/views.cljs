@@ -31,8 +31,11 @@
    [node-size-text-box viz-id]
    [add-node-btn viz-id]
    [force-views/force-viz-graph viz-id
-    {:node-opts {:ons     {:click #(>evt [::force-evts/expand-node viz-id %2])}
-                 :fill-fn #(<sub [::force-subs/node-color viz-id %2])}}]])
+    {:node-opts {:ons       {:click #(if js/d3.event.ctrlKey
+                                       (>evt [::force-evts/expand-node viz-id %2])
+                                       (>evt [::force-evts/toggle-selected-node viz-id %2]))}
+                 :fill-fn   #(<sub [::force-subs/node-color viz-id %2])
+                 :stroke-fn #(<sub [::force-subs/node-outer-color viz-id %2])}}]])
 
 (defn data-table
   [data-sub col-defs {:keys [header row-options]}]

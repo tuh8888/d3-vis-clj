@@ -110,3 +110,11 @@
   [util/viz-id-interceptor trim-v]
   (fn [db [i val]]
     (assoc-in db [:data :nodes i :hovered] val)))
+
+(reg-event-db ::toggle-selected-node
+  [util/viz-id-interceptor trim-v]
+  (fn [db [i]]
+    (let [node (get-in db [:data :nodes i])]
+      (update-in db [:selected :node] #(if (= (:id %) (:id node))
+                                         nil
+                                         node)))))

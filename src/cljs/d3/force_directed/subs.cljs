@@ -34,6 +34,18 @@
           (isa? h id :B) "blue"
           :default "green")))
 
+(reg-sub ::selected-node
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :selected :node])))
+
+(reg-sub ::node-outer-color
+  (fn [[_ viz-id i] _]
+    [(subscribe [::selected-node viz-id]) (subscribe [::get-node viz-id i])])
+  (fn [[selected-node node] _]
+    (if (= (:id selected-node) (:id node))
+      "black"
+      "white")))
+
 (reg-sub ::node-name
   (fn [[_ viz-id i] _]
     (subscribe [::get-node viz-id i]))
