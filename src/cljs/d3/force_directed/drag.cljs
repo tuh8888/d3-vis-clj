@@ -37,6 +37,6 @@
             (let [d (util/get-node (get @ratom :sim) i)]
               (constrain-pos! d nil nil)))]
     (d3-util/set-ons (js/d3.drag)
-                     :start started
-                     :drag dragged
-                     :end ended)))
+                     {:start started
+                      :drag  dragged
+                      :end   ended})))

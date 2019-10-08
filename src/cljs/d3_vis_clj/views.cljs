@@ -30,7 +30,8 @@
   [:div
    [node-size-text-box viz-id]
    [add-node-btn viz-id]
-   [force-views/force-viz-graph viz-id]])
+   [force-views/force-viz-graph viz-id
+    {:node {:ons {:click #(>evt [::force-evts/expand-node viz-id %2])}}}]])
 
 (defn data-table
   [data-sub col-defs {:keys [header row-options]}]

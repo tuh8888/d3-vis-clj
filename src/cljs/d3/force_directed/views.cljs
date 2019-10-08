@@ -13,34 +13,33 @@
        :stroke       stroke})))
 
 (defn node-or-text-did-mount
-  [node viz-id]
+  [node viz-id ons]
   (-> node
       (.call (<sub [::subs/drag-fn viz-id]))
       (util/set-ons
-        :mouseover #(>evt [::evts/set-hovered viz-id %2 true])
-        :mouseout #(>evt [::evts/set-hovered viz-id %2 false])
-        :click #(>evt [::evts/expand-node viz-id %2]))))
+        (merge {:mouseover #(>evt [::evts/set-hovered viz-id %2 true])
+                :mouseout  #(>evt [::evts/set-hovered viz-id %2 false])}
+               ons))))
 
 (defn node-did-mount
-  [node viz-id]
+  [node viz-id {:keys [ons]}]
   (-> node
       (rid3-> {:r    (<sub [::subs/node-size viz-id])
                :fill #(<sub [::subs/node-color viz-id %2])})
-      (node-or-text-did-mount viz-id)))
+      (node-or-text-did-mount viz-id ons)))
 
 (defn text-did-mount
-  [node viz-id]
+  [node viz-id {:keys [ons]}]
   (-> node
       (rid3-> {:text-anchor "middle"})
       (.text #(<sub [::subs/node-name viz-id %2]))
-      (node-or-text-did-mount viz-id)))
+      (node-or-text-did-mount viz-id ons)))
 
-(defn force-viz-graph [viz-id]
+(defn force-viz-graph [viz-id {:keys [node]}]
   [rid3/viz
    {:id     (str (name viz-id) "-graph")
     :ratom  (rf/subscribe [::subs/force-layout viz-id])
     :svg    {:did-mount  #(rf/dispatch-sync [::evts/init-force-viz viz-id])
-
              :did-update #(rid3-> %
                             {:width  (<sub [:window-width])
                              :height (<sub [:window-height])
@@ -58,12 +57,12 @@
               :class           "node"
               :did-mount       #(rf/dispatch-sync
                                   [::evts/set-node-elems viz-id
-                                   (node-did-mount % viz-id)])
+                                   (node-did-mount % viz-id node)])
               :prepare-dataset #(<sub [::subs/get-nodes-js viz-id])}
              {:kind            :elem-with-data
               :tag             "text"
               :class           "texts"
               :did-mount       #(rf/dispatch-sync
                                   [::evts/set-text-elems viz-id
-                                   (text-did-mount % viz-id)])
+                                   (text-did-mount % viz-id node)])
               :prepare-dataset #(<sub [::subs/get-nodes-js viz-id])}]}])
