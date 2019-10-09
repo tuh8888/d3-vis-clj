@@ -27,11 +27,13 @@
        :dispatch         [::viz-resize viz-id opts init-width init-height]})))
 
 (reg-event-db ::viz-resize
-  [trim-v]
-  (fn [db [viz-id {:keys [width height]} new-width new-height]]
-    (-> db
-        (assoc-in [viz-id :width] (* width new-width))
-        (assoc-in [viz-id :height] (* height new-height)))))
+  [trim-v (util/path-nth)]
+  (fn [db [{:keys [width height]} new-width new-height]]
+    (let [new-width  (* width new-width)
+          new-height (* height new-height)]
+      (-> db
+          (assoc-in [:width] new-width)
+          (assoc-in [:height] new-height)))))
 
 (reg-sub ::height
   (fn [db [_ viz-id]]

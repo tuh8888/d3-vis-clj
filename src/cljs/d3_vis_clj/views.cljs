@@ -12,10 +12,16 @@
   [viz-id]
   [:div
    "Node size: "
-   [:input {:type      "text"
+   [:input {:type      "range"
+            :min       "1"
+            :max       "100"
             :value     (<sub [::fses/node-size viz-id])
             :on-change #(>evt [::fses/resize-nodes viz-id
-                               (util/target-value %)])}]])
+                               (util/target-value %)])}]
+   #_[:input {:type      "text"
+              :value     (<sub [::fses/node-size viz-id])
+              :on-change #(>evt [::fses/resize-nodes viz-id
+                                 (util/target-value %)])}]])
 
 (defn node-labels-check-box
   [viz-id]
@@ -71,8 +77,8 @@
                   :overflow  "scroll"}}
     right]])
 (defn force-viz
-  [viz-id]
-  [flex-div "10%" "40%"
+  [viz-id width]
+  [flex-div width "40%"
    [:div
     [node-labels-check-box viz-id]
     [link-labels-check-box viz-id]
@@ -80,7 +86,10 @@
     [add-node-btn viz-id]]
    [:div
     [force-views/force-viz-graph viz-id
-     {:svg-opts  {:width   0.9
+     {:svg-opts  {:width   (- 1 (-> width
+                                    (str/replace #"\%" "")
+                                    (int)
+                                    (/ 100)))
                   :height  0.4
                   :zoom-fn force-interaction/zoom
                   :drag-fn force-interaction/drag}
@@ -158,8 +167,8 @@
 
 (defn mop-table
   "Table for displaying mop data"
-  [viz-id]
-  [flex-div "10%" "50vh"
+  [viz-id width]
+  [flex-div width "50vh"
    [role-selection viz-id]
    [dt-views/data-table
     [:visible-mops viz-id]
@@ -173,8 +182,9 @@
                                 :background-color (<sub [:mop-color viz-id i])}})}]])
 
 (defn main-panel []
-  [:div
-   [:h1 (<sub [:name])]
-   [:div
-    [mop-table :panel1]
-    [force-viz :force-viz1]]])
+  (let [width "30%"]
+    [:div
+     [:h1 (<sub [:name])]
+     [:div
+      [mop-table :panel1 width]
+      [force-viz :force-viz1 width]]]))
