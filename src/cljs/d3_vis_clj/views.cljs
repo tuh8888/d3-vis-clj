@@ -66,11 +66,10 @@
     [link-labels-check-box viz-id]]
    [:div
     [force-views/force-viz-graph viz-id
-     {:svg-opts  {:width        0.9
-                  :height       0.4
-                  :zoom-fn      force-interaction/zoom
-                  :drag-fn      force-interaction/drag
-                  :initial-data (<sub [:initial-force-data viz-id])}
+     {:svg-opts  {:width   0.9
+                  :height  0.4
+                  :zoom-fn force-interaction/zoom
+                  :drag-fn force-interaction/drag}
       :node-opts {:ons      {:click #(if js/d3.event.ctrlKey
                                        (>evt [::fses/expand-node viz-id %2])
                                        (>evt [::fses/toggle-selected-node viz-id %2]))}

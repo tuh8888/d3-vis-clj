@@ -9,9 +9,9 @@
 
 (reg-event-fx ::init-force-viz
   [trim-v]
-  (fn [{:keys [db]} [viz-id node {:keys [initial-data] :as opts}]]
+  (fn [{:keys [db]} [viz-id node opts]]
     {:db         (-> db
-                     (update viz-id merge db/default-force-layout initial-data)
+                     (update viz-id #(merge db/default-force-layout %))
                      (update-in [viz-id :data :links] (fnil identity []))
                      (update-in [viz-id :data :nodes] (fnil identity []))
                      (assoc-in [viz-id :svg] node))

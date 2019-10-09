@@ -1,5 +1,5 @@
 (ns data-table.views
-  (:require [d3-vis-clj.util :refer [<sub]]))
+  (:require [d3-vis-clj.util :refer [<sub >evt]]))
 
 (defn data-table
   [data-sub col-defs {:keys [header row-options]}]

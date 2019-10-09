@@ -1,4 +1,5 @@
-(ns d3-vis-clj.db)
+(ns d3-vis-clj.db
+  (:require [data-table.db :as dt-db]))
 
 (def example-mops
   {:hierarchy (-> (make-hierarchy)
@@ -17,6 +18,16 @@
 (def default-force-data
   {:data {:nodes [(get-in example-mops [:mops :x1])]}})
 
+(def default-table-data
+  (merge
+    dt-db/default-data
+    {:data (-> example-mops
+               (get-in [:mops])
+               (vals)
+               (vec))}))
+
 (def default-db
-  {:name     "d3-vis-clj"
-   :all-data example-mops})
+  (assoc {:name     "d3-vis-clj"
+          :all-data example-mops}
+    :panel1 default-table-data
+    :force-viz1 default-force-data))

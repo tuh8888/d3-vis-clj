@@ -7,28 +7,12 @@
             [d3-vis-clj.db :as db]
             [clojure.set :as set]
             [data-table.db :as dt-db]
+            [data-table.subs-evts :as dt-ses]
             [d3-vis-clj.util :as util]))
 
 (reg-event-db :initialize-db
   (fn [_ _]
     db/default-db))
-
-(reg-sub :initial-force-data
-  (fn [_ [_ _]]
-    db/default-force-data))
-
-(reg-event-db :init-mop-table
-  [trim-v (util/path-nth)]
-  (fn [db _]
-    (let [db (-> db
-                 (merge dt-db/default-data)
-                 (assoc :data (-> db/example-mops
-                                  (get-in [:mops])
-                                  (vals)
-                                  (vec))))]
-      (println db)
-      db)))
-
 
 (reg-event-db :window-resized
   [trim-v]
@@ -57,10 +41,6 @@
   [trim-v (util/path-nth) (path [:data]) (util/path-nth) (path [:selected])]
   not)
 
-(reg-sub :row-value
-  (fn [db [_ viz-id i]]
-    (get-in db [viz-id :data i])))
-
 (reg-sub :viz-type
   (fn [db [_ viz-id]]
     (get-in db [viz-id :type])))
@@ -69,7 +49,7 @@
   (fn [[_ viz-id i] _]
     [(subscribe [:viz-type viz-id])
      (subscribe [::fses/node viz-id i])
-     (subscribe [:row-value viz-id i])])
+     (subscribe [::dt-ses/row-value viz-id i])])
   (fn [[type node row]]
     (case type
       ::dt-db/table row
