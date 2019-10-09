@@ -46,7 +46,7 @@
   ;; because that's where our development helper functions like (go) and
   ;; (browser-repl) live.
   :repl-options {:init-ns user
-                 :tineout 300000}
+                 :timeout 300000}
 
   :cljsbuild {:builds
               [{:id "app"
