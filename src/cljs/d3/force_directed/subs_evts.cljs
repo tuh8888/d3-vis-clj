@@ -4,6 +4,7 @@
                                           trim-v path]]
             [d3.force-directed.db :as db]
             [d3.force-directed.layout :as layout]
+            [common.subs :as c-subs]
             [d3-vis-clj.util :as util]))
 
 (reg-event-fx ::init-force-viz
@@ -73,7 +74,7 @@
   [trim-v]
   (fn [db [viz-id opts]]
     (update db viz-id merge
-            (layout/new-sim (rf/subscribe [:common.subs/viz viz-id])
+            (layout/new-sim (rf/subscribe [::c-subs/viz viz-id])
                             opts))))
 
 (reg-event-db ::set-node-to-add

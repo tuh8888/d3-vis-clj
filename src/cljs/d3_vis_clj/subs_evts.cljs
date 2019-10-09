@@ -6,6 +6,7 @@
             [d3.force-directed.subs-evts :as fses]
             [d3-vis-clj.db :as db]
             [clojure.set :as set]
+            [data-table.db :as dt-db]
             [d3-vis-clj.util :as util]))
 
 (reg-event-db :initialize-db
@@ -19,9 +20,15 @@
 (reg-event-db :init-mop-table
   [trim-v (util/path-nth)]
   (fn [db _]
-    (-> db
-        (assoc :type :table)
-        (assoc :data (vec (vals (get-in db/example-mops [:mops])))))))
+    (let [db (-> db
+                 (merge dt-db/default-data)
+                 (assoc :data (-> db/example-mops
+                                  (get-in [:mops])
+                                  (vals)
+                                  (vec))))]
+      (println db)
+      db)))
+
 
 (reg-event-db :window-resized
   [trim-v]
@@ -65,7 +72,7 @@
      (subscribe [:row-value viz-id i])])
   (fn [[type node row]]
     (case type
-      :table row
+      ::dt-db/table row
       ::fses/force-layout node)))
 
 (reg-event-db :toggle-sort-roles
