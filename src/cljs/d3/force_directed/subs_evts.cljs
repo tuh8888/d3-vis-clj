@@ -77,21 +77,16 @@
             (layout/new-sim (rf/subscribe [::c-subs/viz viz-id])
                             opts))))
 
-(reg-event-db ::set-node-to-add
-  [trim-v (util/path-nth)]
-  (fn [db [node-id]]
-    (assoc-in db [:node-to-add] (keyword node-id))))
-
 (reg-event-fx ::add-node
   [trim-v]
-  (fn [{:keys [db]} [viz-id]]
-    (let [node-id  (get-in db [viz-id :node-to-add])
-          new-node (get-in db [:all-data :mops node-id])]
-      (when new-node
-        (let [{{{:keys [nodes]} :data :as config} viz-id} db
-              nodes (conj nodes new-node)]
-          {::restart-sim [config nodes]
-           :db           (assoc-in db [viz-id :data :nodes] nodes)})))))
+  (fn [{:keys [db]} [viz-id new-node]]
+    (when (and
+            (not (some #(= (:id %) (:id new-node)) (get-in db [viz-id :data :nodes])))
+            new-node)
+      (let [{{{:keys [nodes]} :data :as config} viz-id} db
+            nodes (conj nodes new-node)]
+        {::restart-sim [config nodes]
+         :db           (assoc-in db [viz-id :data :nodes] nodes)}))))
 
 (defn slots->links
   [id slots]
@@ -160,10 +155,6 @@
 (reg-sub ::node-size
   (fn [db [_ viz-id]]
     (get-in db [viz-id :node-config :r] 10)))
-
-(reg-sub ::node-to-add
-  (fn [db [_ viz-id]]
-    (get-in db [viz-id :node-to-add])))
 
 (reg-sub ::link-config
   (fn [db [_ viz-id]]

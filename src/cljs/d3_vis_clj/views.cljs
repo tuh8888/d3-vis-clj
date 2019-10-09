@@ -5,7 +5,8 @@
             [d3.force-directed.subs-evts :as fses]
             [data-table.views :as dt-views]
             [d3.force-directed.interaction :as force-interaction]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [re-frame.core :as rf]))
 
 (defn node-size-text-box
   [viz-id]
@@ -36,14 +37,24 @@
 
 (defn add-node-btn
   [viz-id]
-  [:div
-   [:button {:type     "button"
-             :on-click #(>evt [::fses/add-node viz-id])}
-    "Add Node"]
-   [:input {:type      "text"
-            :value     (<sub [::fses/node-to-add viz-id])
-            :on-change #(>evt [::fses/set-node-to-add viz-id
-                               (util/target-value %)])}]])
+  (let [node-list-id (str (random-uuid))
+        nodes        (<sub [:all-mops])]
+    [:div
+     [:button {:type     "button"
+               :on-click #(>evt [::fses/add-node viz-id
+                                 (<sub [:mop nil (<sub [:node-to-add viz-id])])])}
+      "Add Node"]
+     [:input {:type      "text"
+              :list      node-list-id
+              :value     (<sub [:node-to-add viz-id])
+              :on-change #(>evt [:set-node-to-add viz-id
+                                 (util/target-value %)])}]
+     [:datalist {:id node-list-id}
+      (for [[i mop] (map-indexed vector nodes)]
+        ^{:key (random-uuid)}
+        [:option
+         (:id mop)])]]))
+
 
 (defn flex-div
   [width height left right]

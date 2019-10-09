@@ -45,15 +45,30 @@
   (fn [db [_ viz-id]]
     (get-in db [viz-id :type])))
 
+(reg-sub :database-mop
+  (fn [db [_ id]]
+    (get-in db [:all-data :mops id])))
+
+(reg-sub :node-to-add
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :node-to-add])))
+
+(reg-event-db :set-node-to-add
+  [trim-v (util/path-nth)]
+  (fn [db [node-id]]
+    (assoc-in db [:node-to-add] (keyword node-id))))
+
 (reg-sub :mop
   (fn [[_ viz-id i] _]
     [(subscribe [:viz-type viz-id])
      (subscribe [::fses/node viz-id i])
-     (subscribe [::dt-ses/row-value viz-id i])])
-  (fn [[type node row]]
+     (subscribe [::dt-ses/row-value viz-id i])
+     (subscribe [:database-mop i])])
+  (fn [[type node row mop] [_ _ i]]
     (case type
       ::dt-db/table row
-      ::fses/force-layout node)))
+      ::fses/force-layout node
+      mop)))
 
 (reg-event-db :toggle-sort-roles
   [trim-v (util/path-nth)]
@@ -216,3 +231,7 @@
     (if (:selected link)
       selected-color
       "#E5E5E5")))
+
+(reg-sub :all-mops
+  (fn [db _]
+    (vals (get-in db [:all-data :mops]))))
