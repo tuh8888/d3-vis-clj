@@ -17,10 +17,10 @@
           (col-header-render-fn col-key)]))]]
    [:tbody
     (doall
-      (for [{:keys [id] :as item} (<sub data-sub)]
+      (for [[i item] (map-indexed vector (<sub data-sub))]
         ^{:key (str (random-uuid))}
         [:tr
-         (row-options id)
+         (row-options i)
          (for [{:keys [col-key render-fn]} col-defs
                :let [val (get-in item col-key)]]
            ^{:key (str (random-uuid))}

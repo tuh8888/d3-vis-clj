@@ -9,7 +9,6 @@
 (reg-event-fx ::init-force-viz
   [trim-v]
   (fn [{:keys [db]} [viz-id node {:keys [initial-data] :as opts}]]
-    (println initial-data)
     {:db         (-> db
                      (update viz-id merge db/default-force-layout initial-data)
                      (update-in [viz-id :data :links] (fnil identity []))

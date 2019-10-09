@@ -1,7 +1,6 @@
 (ns d3-vis-clj.views
   (:require [cljsjs.d3]
             [d3-vis-clj.util :refer [<sub >evt] :as util]
-            [common.subs :as c-subs]
             [d3.force-directed.views :as force-views]
             [d3.force-directed.subs-evts :as fses]
             [data-table.views :as dt-views]
@@ -75,7 +74,7 @@
       :node-opts {:ons      {:click #(if js/d3.event.ctrlKey
                                        (>evt [::fses/expand-node viz-id %2])
                                        (>evt [::fses/toggle-selected-node viz-id %2]))}
-                  :style    {:fill   #(<sub [:node-color viz-id %2])
+                  :style    {:fill   #(<sub [:mop-color viz-id %2])
                              :stroke #(<sub [:node-stroke viz-id %2])}
                   :label-fn #(<sub [:node-label viz-id %2])}
       :link-opts {:label-fn #(<sub [:link-label viz-id %2])
@@ -100,7 +99,7 @@
         ^{:key (str (random-uuid))}
         [:option {:value -role} -role])]
      [:button {:type     "button"
-               :on-click #(>evt [:toggle-sort-role viz-id role])}
+               :on-click #(>evt [:toggle-sort-roles viz-id role])}
       "sort"]]))
 
 (defn slot-cols
@@ -155,11 +154,10 @@
            {:col-key [:name]}]
           (slot-cols viz-id))
     {:header      (role-aggregation-row viz-id)
-     :row-options (fn [id]
-                    {:on-click #(>evt [:toggle-selected-mop viz-id id])
-                     :style    {:fill "blue"}
-                     :class    [(when (<sub [::c-subs/selected? viz-id id])
-                                  "selected")]})}]])
+     :row-options (fn [i]
+                    {:on-click #(>evt [:toggle-selected-mop viz-id i])
+                     :style    {:fill             "blue"
+                                :background-color (<sub [:mop-color viz-id i])}})}]])
 
 (defn main-panel []
   [:div

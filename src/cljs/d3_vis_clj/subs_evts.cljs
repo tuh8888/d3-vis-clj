@@ -17,9 +17,11 @@
     db/default-force-data))
 
 (reg-event-db :init-mop-table
-  [trim-v (util/path-nth) (path [:data])]
-  (fn [_ _]
-    (vals (get-in db/example-mops [:mops]))))
+  [trim-v (util/path-nth)]
+  (fn [db _]
+    (-> db
+        (assoc :type :table)
+        (assoc :data (vec (vals (get-in db/example-mops [:mops])))))))
 
 (reg-event-db :window-resized
   [trim-v]
@@ -45,11 +47,28 @@
     (:width db)))
 
 (reg-event-db :toggle-selected-mop
-  [trim-v (util/path-nth) (path [:selected])]
-  (fn [db [id]]
-    (util/toggle-contains-set db id)))
+  [trim-v (util/path-nth) (path [:data]) (util/path-nth) (path [:selected])]
+  not)
 
-(reg-event-db :toggle-sort-role
+(reg-sub :row-value
+  (fn [db [_ viz-id i]]
+    (get-in db [viz-id :data i])))
+
+(reg-sub :viz-type
+  (fn [db [_ viz-id]]
+    (get-in db [viz-id :type])))
+
+(reg-sub :mop
+  (fn [[_ viz-id i] _]
+    [(subscribe [:viz-type viz-id])
+     (subscribe [::fses/node viz-id i])
+     (subscribe [:row-value viz-id i])])
+  (fn [[type node row]]
+    (case type
+      :table row
+      ::fses/force-layout node)))
+
+(reg-event-db :toggle-sort-roles
   [trim-v (util/path-nth)]
   (fn [db [role]]
     (let [sorted? (get-in db [:sorted-roles role])]
@@ -59,14 +78,15 @@
                                         (conj (or % #{}) role)))
           (update-in [:data]
                      (fn [data]
-                       (let [data (sort-by #(let [v (get-in % [:slots role])]
-                                              (if (coll? v)
-                                                (first v)
-                                                v))
-                                           data)]
-                         (if sorted?
-                           data
-                           (reverse data)))))))))
+                       (cond->> data
+                                true (sort-by #(let [v (get-in % [:slots role])]
+                                                 (if (coll? v)
+                                                   (first v)
+                                                   v)))
+                                sorted? (reverse)
+                                true (vec))))))))
+
+
 
 (reg-sub :sorted-roles
   (fn [db [_ viz-id]]
@@ -182,13 +202,16 @@
   (fn [db [_ viz-id]]
     (get-in db [viz-id :data])))
 
-(reg-sub :node-color
+(def selected-color "red")
+
+(reg-sub :mop-color
   (fn [[_ viz-id i] _]
-    [(subscribe [:hierarchy]) (subscribe [::fses/node viz-id i])])
-  (fn [[h {:keys [id hovered]}] _]
+    [(subscribe [:hierarchy]) (subscribe [:mop viz-id i])])
+  (fn [[h {:keys [id hovered selected]}] _]
     (cond hovered "yellow"
+          selected selected-color
           (isa? h id :A) "cyan"
-          (isa? h id :B) "light-grey"
+          (isa? h id :B) "pink"
           :default "white")))
 
 (reg-sub :node-stroke
@@ -196,7 +219,7 @@
     (subscribe [::fses/node viz-id i]))
   (fn [node _]
     (if (:selected node)
-      "red"
+      selected-color
       "white")))
 
 (reg-sub :link-stroke
@@ -204,5 +227,5 @@
     (subscribe [::fses/link viz-id i]))
   (fn [link _]
     (if (:selected link)
-      "red"
+      selected-color
       "#E5E5E5")))
