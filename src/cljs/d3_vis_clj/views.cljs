@@ -38,22 +38,25 @@
 (defn add-node-btn
   [viz-id]
   (let [node-list-id (str (random-uuid))
-        nodes        (<sub [:all-mops])]
+        nodes        (<sub [:all-mops])
+        do-action    #(>evt [::fses/add-node viz-id
+                             (<sub [:mop nil (<sub [:node-to-add viz-id])])])]
     [:div
-     [:button {:type     "button"
-               :on-click #(>evt [::fses/add-node viz-id
-                                 (<sub [:mop nil (<sub [:node-to-add viz-id])])])}
-      "Add Node"]
-     [:input {:type      "text"
-              :list      node-list-id
-              :value     (<sub [:node-to-add viz-id])
-              :on-change #(>evt [:set-node-to-add viz-id
-                                 (util/target-value %)])}]
+     [:input {:type         "text"
+              :list         node-list-id
+              :value        (<sub [:node-to-add viz-id])
+              :on-change    #(>evt [:set-node-to-add viz-id
+                                    (util/target-value %)])
+              :on-key-press #(when (= (.-charCode %) 13)
+                               (do-action))}]
      [:datalist {:id node-list-id}
-      (for [[i mop] (map-indexed vector nodes)]
+      (for [mop nodes]
         ^{:key (random-uuid)}
-        [:option
-         (:id mop)])]]))
+        [:option {:value (:id mop)}
+         (:name mop)])]
+     [:button {:type     "button"
+               :on-click do-action}
+      "Add Node"]]))
 
 
 (defn flex-div
@@ -71,10 +74,10 @@
   [viz-id]
   [flex-div "10%" "40%"
    [:div
-    [node-size-text-box viz-id]
-    [add-node-btn viz-id]
     [node-labels-check-box viz-id]
-    [link-labels-check-box viz-id]]
+    [link-labels-check-box viz-id]
+    [node-size-text-box viz-id]
+    [add-node-btn viz-id]]
    [:div
     [force-views/force-viz-graph viz-id
      {:svg-opts  {:width   0.9
