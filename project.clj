@@ -1,6 +1,6 @@
 (defproject d3-vis-clj "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
+  :description "Provides templates for doing data analysis with d3."
+  :url "https://github.com/tuh8888/d3-vis-clj"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
