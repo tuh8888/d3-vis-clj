@@ -4,7 +4,8 @@
             [d3-vis-clj.subs-evts]
             [d3-vis-clj.views :as views]
             [d3-vis-clj.config :as config]
-            [district0x.re-frame.window-fx]))
+            [district0x.re-frame.window-fx]
+            [day8.re-frame.http-fx]))
 
 (enable-console-print!)
 

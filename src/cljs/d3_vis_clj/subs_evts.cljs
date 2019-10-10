@@ -4,6 +4,7 @@
                                           reg-event-db reg-event-fx
                                           trim-v path]]
             [d3.force-directed.subs-evts :as fses]
+            [ajax.core :as ajax]
             [d3-vis-clj.db :as db]
             [clojure.set :as set]
             [data-table.db :as dt-db]
@@ -235,3 +236,31 @@
 (reg-sub :all-mops
   (fn [db _]
     (vals (get-in db [:all-data :mops]))))
+
+(reg-event-fx :send-message
+  [trim-v]
+  (fn [{:keys [db]} [message]]
+    {:db         (assoc db :sending true)
+     :http-xhrio {:method          :get
+                  :uri             "/hello"
+                  :timeout         3000
+                  :response-format (ajax/raw-response-format)
+                  :on-success      [:receive-message]
+                  :on-failure      [:handle-failure]}}))
+
+(reg-event-db :receive-message
+  [trim-v]
+  (fn [db [response]]
+    (println response)
+    (assoc db :message response)))
+
+(reg-event-db :handle-failure
+  [trim-v]
+  (fn [db [response]]
+    (println response)
+    (assoc db :message :failure)))
+
+(reg-sub :message
+  (fn [db _]
+    (get db :message :not-delivered)))
+

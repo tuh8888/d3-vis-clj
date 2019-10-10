@@ -25,7 +25,7 @@
                  [district0x/re-frame-window-fx "1.0.2"]
                  [org.clojars.stumitchell/clairvoyant "0.2.1"]
                  [day8/re-frame-tracer "0.1.1-SNAPSHOT"]
-                 [cljs-ajax "0.8.0"]]
+                 [day8.re-frame/http-fx "0.1.6"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-environ "1.1.0"]]

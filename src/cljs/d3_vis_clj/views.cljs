@@ -176,10 +176,21 @@
                      :style    {:fill             "blue"
                                 :background-color (<sub [:mop-color viz-id i])}})}]])
 
+(defn ajax-test-btn
+  "Test if ajax sent and received"
+  []
+  [:div
+   [:button
+    {:type     "button"
+     :on-click #(>evt [:send-message "hello"])}
+    "Send message"]
+   [:label (<sub [:message])]])
+
 (defn main-panel []
   (let [width "30%"]
     [:div
      [:h1 (<sub [:name])]
+     [ajax-test-btn]
      [:div
-      [mop-table :panel1 width]
-      [force-viz :force-viz1 width]]]))
+      #_[mop-table :panel1 width]
+      #_[force-viz :force-viz1 width]]]))
