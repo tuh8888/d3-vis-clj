@@ -119,7 +119,7 @@
                             (set))
           nodes        (->> slots
                             (mapcat second)
-                            (map #(get-in db [:all-data :mops %]))
+                            (map #(get-in db [:cached-data :mops %]))
                             (remove #(old-node-ids (:id %)))
                             (into nodes))]
 

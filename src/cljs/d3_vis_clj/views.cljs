@@ -179,7 +179,7 @@
 (defn ajax-test-btn
   "Test if ajax sent and received"
   []
-  (let [do-action #(>evt [:send-message (<sub [:message])])]
+  (let [do-action #(>evt [:request-mop (<sub [:message])])]
     [:div
      [:input
       {:type         "text"

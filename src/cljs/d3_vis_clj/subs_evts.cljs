@@ -46,9 +46,9 @@
   (fn [db [_ viz-id]]
     (get-in db [viz-id :type])))
 
-(reg-sub :database-mop
+(reg-sub :cached-mops
   (fn [db [_ id]]
-    (get-in db [:all-data :mops id])))
+    (get-in db [:cached-data :mops id])))
 
 (reg-sub :node-to-add
   (fn [db [_ viz-id]]
@@ -64,7 +64,7 @@
     [(subscribe [:viz-type viz-id])
      (subscribe [::fses/node viz-id i])
      (subscribe [::dt-ses/row-value viz-id i])
-     (subscribe [:database-mop i])])
+     (subscribe [:cached-mops i])])
   (fn [[type node row mop] [_ _ _]]
     (case type
       ::dt-db/table row
@@ -199,7 +199,7 @@
 
 (reg-sub :hierarchy
   (fn [db]
-    (get-in db [:all-data :hierarchy])))
+    (get-in db [:cached-data :hierarchy])))
 
 (reg-sub :visible-mops
   (fn [db [_ viz-id]]
@@ -235,14 +235,15 @@
 
 (reg-sub :all-mops
   (fn [db _]
-    (vals (get-in db [:all-data :mops]))))
+    (vals (get-in db [:cached-data :mops]))))
 
-(reg-event-fx :send-message
+(reg-event-fx :request-mop
   [trim-v]
-  (fn [{:keys [db]} [message]]
+  (fn [{:keys [db]} [id]]
     {:db         (assoc db :sending true)
      :http-xhrio {:method          :get
-                  :uri             (str "/hello/" message)
+                  :uri             "/mop/"
+                  :params          {:id id}
                   :timeout         3000
                   :response-format (ajax/json-response-format {:keywords? true})
                   :on-success      [:receive-message]
@@ -252,13 +253,15 @@
   [trim-v]
   (fn [db [response]]
     (println "success" response)
-    (assoc db :message response)))
+    (assoc db :message response
+              :sending false)))
 
 (reg-event-db :handle-failure
   [trim-v]
   (fn [db [response]]
     (println "failure" response)
-    (assoc db :message :failure)))
+    (assoc db :message :failure
+              :sending false)))
 
 (reg-event-db :set-message
   [trim-v]
