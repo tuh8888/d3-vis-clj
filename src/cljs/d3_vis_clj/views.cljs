@@ -5,8 +5,7 @@
             [d3.force-directed.subs-evts :as fses]
             [data-table.views :as dt-views]
             [d3.force-directed.interaction :as force-interaction]
-            [clojure.string :as str]
-            [re-frame.core :as rf]))
+            [clojure.string :as str]))
 
 (defn node-size-text-box
   [viz-id]
@@ -17,11 +16,7 @@
             :max       "100"
             :value     (<sub [::fses/node-size viz-id])
             :on-change #(>evt [::fses/resize-nodes viz-id
-                               (util/target-value %)])}]
-   #_[:input {:type      "text"
-              :value     (<sub [::fses/node-size viz-id])
-              :on-change #(>evt [::fses/resize-nodes viz-id
-                                 (util/target-value %)])}]])
+                               (util/target-value %)])}]])
 
 (defn node-labels-check-box
   [viz-id]
