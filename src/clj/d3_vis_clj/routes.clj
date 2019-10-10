@@ -2,9 +2,10 @@
   (:require [clojure.java.io :as io]
             [compojure.core :refer [ANY GET PUT POST DELETE routes]]
             [compojure.route :refer [resources]]
-            [ring.util.response :refer [response]]))
+            [ring.util.response :refer [response]]
+            [cheshire.core :refer :all]))
 
-(def test-route (GET "/hello" [] "world!"))
+(def test-route (GET "/hello" [] (generate-string {:hello "world!"})))
 
 (comment (test-route {:server-port    80
                       :server-name    "127.0.0.1"

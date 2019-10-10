@@ -65,7 +65,7 @@
      (subscribe [::fses/node viz-id i])
      (subscribe [::dt-ses/row-value viz-id i])
      (subscribe [:database-mop i])])
-  (fn [[type node row mop] [_ _ i]]
+  (fn [[type node row mop] [_ _ _]]
     (case type
       ::dt-db/table row
       ::fses/force-layout node
@@ -244,23 +244,23 @@
      :http-xhrio {:method          :get
                   :uri             "/hello"
                   :timeout         3000
-                  :response-format (ajax/raw-response-format)
+                  :response-format (ajax/json-response-format {:keywords? true})
                   :on-success      [:receive-message]
                   :on-failure      [:handle-failure]}}))
 
 (reg-event-db :receive-message
   [trim-v]
   (fn [db [response]]
-    (println response)
+    (println "success" response)
     (assoc db :message response)))
 
 (reg-event-db :handle-failure
   [trim-v]
   (fn [db [response]]
-    (println response)
+    (println "failure" response)
     (assoc db :message :failure)))
 
 (reg-sub :message
   (fn [db _]
-    (get db :message :not-delivered)))
+    (get-in db [:message :hello] :not-delivered)))
 
