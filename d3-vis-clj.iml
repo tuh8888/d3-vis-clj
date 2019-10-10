@@ -22,7 +22,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Leiningen: args4j:2.0.26" level="project" />
     <orderEntry type="library" name="Leiningen: bk/ring-gzip:0.3.0" level="project" />
-    <orderEntry type="library" name="Leiningen: cheshire:5.9.0" level="project" />
+    <orderEntry type="library" name="Leiningen: cheshire:5.7.1" level="project" />
     <orderEntry type="library" name="Leiningen: cider/cider-nrepl:0.18.0" level="project" />
     <orderEntry type="library" name="Leiningen: cider/piggieback:0.4.0" level="project" />
     <orderEntry type="library" name="Leiningen: clj-logging-config:1.9.12" level="project" />
@@ -42,8 +42,8 @@
     <orderEntry type="library" name="Leiningen: com.cognitect/transit-java:0.8.337" level="project" />
     <orderEntry type="library" name="Leiningen: com.cognitect/transit-js:0.8.846" level="project" />
     <orderEntry type="library" name="Leiningen: com.fasterxml.jackson.core/jackson-core:2.8.7" level="project" />
-    <orderEntry type="library" name="Leiningen: com.fasterxml.jackson.dataformat/jackson-dataformat-cbor:2.9.9" level="project" />
-    <orderEntry type="library" name="Leiningen: com.fasterxml.jackson.dataformat/jackson-dataformat-smile:2.9.9" level="project" />
+    <orderEntry type="library" name="Leiningen: com.fasterxml.jackson.dataformat/jackson-dataformat-cbor:2.8.6" level="project" />
+    <orderEntry type="library" name="Leiningen: com.fasterxml.jackson.dataformat/jackson-dataformat-smile:2.8.6" level="project" />
     <orderEntry type="library" name="Leiningen: com.google.code.findbugs/jsr305:3.0.1" level="project" />
     <orderEntry type="library" name="Leiningen: com.google.code.gson/gson:2.7" level="project" />
     <orderEntry type="library" name="Leiningen: com.google.errorprone/error_prone_annotations:2.0.18" level="project" />
@@ -146,7 +146,6 @@
     <orderEntry type="library" name="Leiningen: ring/ring-devel:1.7.1" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-headers:0.3.0" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-jetty-adapter:1.7.1" level="project" />
-    <orderEntry type="library" name="Leiningen: ring/ring-json:0.5.0" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-servlet:1.7.1" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-ssl:0.3.0" level="project" />
     <orderEntry type="library" name="Leiningen: ring:1.7.1" level="project" />

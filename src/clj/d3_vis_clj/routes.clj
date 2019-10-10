@@ -2,11 +2,9 @@
   (:require [clojure.java.io :as io]
             [compojure.core :refer [ANY GET PUT POST DELETE routes]]
             [compojure.route :refer [resources]]
-    #_[ring.middleware.json :refer [wrap-json-response]
-            [ring.util.response :refer [response]]]))
+            [ring.util.response :refer [response]]))
 
-(def test-route (GET "/hello" []
-                  "hello" #_(wrap-json-response (response {:hello "world!"}))))
+(def test-route (GET "/hello" [] "world!"))
 
 (comment (test-route {:server-port    80
                       :server-name    "127.0.0.1"
@@ -16,7 +14,7 @@
                       :headers        {}
                       :request-method :get}))
 
-(defn home-routes [endpoint]
+(defn home-routes [_]
   (routes
     (GET "/" _
       (-> "public/index.html"
