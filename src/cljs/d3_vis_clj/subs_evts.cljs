@@ -242,7 +242,7 @@
   (fn [{:keys [db]} [message]]
     {:db         (assoc db :sending true)
      :http-xhrio {:method          :get
-                  :uri             "/hello"
+                  :uri             (str "/hello/" message)
                   :timeout         3000
                   :response-format (ajax/json-response-format {:keywords? true})
                   :on-success      [:receive-message]
@@ -260,7 +260,12 @@
     (println "failure" response)
     (assoc db :message :failure)))
 
+(reg-event-db :set-message
+  [trim-v]
+  (fn [db [message]]
+    (assoc db :message message)))
+
 (reg-sub :message
   (fn [db _]
-    (get-in db [:message :hello] :not-delivered)))
+    (str (get db :message :not-delivered))))
 

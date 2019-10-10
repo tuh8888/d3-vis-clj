@@ -5,7 +5,13 @@
             [ring.util.response :refer [response]]
             [cheshire.core :refer :all]))
 
-(def test-route (GET "/hello" [] (generate-string {:hello "world!"})))
+(def test-route
+  (GET "/hello/:id" [id]
+    (println id)
+    (generate-string {:hello (case id
+                               "hello" "world!"
+                               "goodbye" "hasta luego"
+                               "what did you say?")})))
 
 (comment (test-route {:server-port    80
                       :server-name    "127.0.0.1"
