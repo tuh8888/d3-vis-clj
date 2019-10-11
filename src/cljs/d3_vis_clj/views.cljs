@@ -88,7 +88,7 @@
                   :height  0.4
                   :zoom-fn force-interaction/zoom
                   :drag-fn force-interaction/drag}
-      :node-opts {:ons      {:click #(if (util/key? :d3 :ctrl)
+      :node-opts {:ons      {:click #(if js/d3.event.ctrlKey
                                        (>evt [::fses/expand-node viz-id %2])
                                        (>evt [::fses/toggle-selected-node viz-id %2]))}
                   :style    {:fill   #(<sub [:mop-color viz-id %2])

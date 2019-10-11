@@ -21,8 +21,8 @@
 (reg-event-fx ::initialize-viz-resize
   [trim-v]
   (fn [_ [viz-id opts]]
-    (let [init-width  js/window.innerWidth
-          init-height js/window.innerHeight]
+    (let [init-width  (util/win-inner-w)
+          init-height (util/win-inner-h)]
       {:window/on-resize {:dispatch [::viz-resize viz-id opts]}
        :dispatch         [::viz-resize viz-id opts init-width init-height]})))
 

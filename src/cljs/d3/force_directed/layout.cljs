@@ -56,7 +56,7 @@
 (defn ^:private update-link-elems
   "Updates link elements with position provided by simulation"
   [sim link-elems]
-  (when link-elems
+  (when (= (.size link-elems) (alength (util/get-links sim)))
     (rid3-> link-elems
       {:x1 (fn [_ i] (util/get-link sim i :source :x))
        :y1 (fn [_ i] (util/get-link sim i :source :y))
@@ -67,7 +67,7 @@
 (defn ^:private update-node-elems
   "Updates node elements with position provided by simulation"
   [sim node-elems]
-  (when node-elems
+  (when (= (.size node-elems) (alength (util/get-nodes sim)))
     (rid3-> node-elems
       {:transform (fn [_ i]
                     (util/translate (util/get-node sim i :x)
@@ -76,7 +76,7 @@
 (defn ^:private update-link-text-elems
   "Updates node elements with position provided by simulation"
   [sim link-text-elems]
-  (when link-text-elems
+  (when (= (.size link-text-elems) (alength (util/get-links sim)))
     (rid3-> link-text-elems
       {:transform (fn [_ i]
                     (let [[x y] (util/link-midpoint (util/get-link sim i))]

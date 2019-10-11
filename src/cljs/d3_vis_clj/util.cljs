@@ -1,5 +1,6 @@
 (ns d3-vis-clj.util
-  (:require [goog.object :as gobj]
+  (:require [cljsjs.d3]
+            [goog.object :as gobj]
             [re-frame.core :refer [->interceptor
                                    get-coeffect assoc-coeffect
                                    get-effect assoc-effect]]))
@@ -16,7 +17,7 @@
               :ctrl  17})
 
 (def d3-key-map
-  {:ctrl js/d3.event.ctrlKey})
+  {:ctrl ctrlKey})
 
 (defn key?
   [e key]
@@ -37,7 +38,7 @@
 (defn target-value
   "Returns value found in text field"
   [d]
-  (-> d (.-target ) (.-value)))
+  (-> d (.-target) (.-value)))
 
 (defn set-ons
   "Utility function for adding a bunch of ons."
