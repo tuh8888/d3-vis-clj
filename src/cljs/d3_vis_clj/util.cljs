@@ -15,9 +15,14 @@
 (def key-map {:enter 13
               :ctrl  17})
 
+(def d3-key-map
+  {:ctrl js/d3.event.ctrlKey})
+
 (defn key?
   [e key]
-  (= (.-charCode e) (key key-map)))
+  (if (= :d3 e)
+    (key d3-key-map)
+    (= (.-charCode e) (key key-map))))
 
 (defn get-label
   [d]
