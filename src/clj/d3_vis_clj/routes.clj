@@ -8,6 +8,7 @@
 
 (defn mop
   [id]
+  (println id)
   (select-keys (:mops db/example-mops)
                [(keyword id)]))
 (defn hierarchy
@@ -22,6 +23,11 @@
          (map #(select-keys % [:name :id]))
          (zipmap (keys mops)))))
 
+(defn mop [id]
+  (-> db/example-mops
+      :mops
+      (select-keys [(keyword id)])))
+
 (defn home-routes [_]
   (routes
     (GET "/" _
@@ -32,8 +38,7 @@
           (assoc :headers {"Content-Type" "text/html; charset=utf-8"})))
     (-> "/mop/"
         (GET [id]
-          (-> id
-              (mop)
+          (-> (mop id)
               (response)))
         (t/wrap-transit-response))
     (-> "/hierarchy/"

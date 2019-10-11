@@ -269,7 +269,7 @@
                   :uri             "/mop/"
                   :params          {:id id}
                   :timeout         3000
-                  :response-format (ajax/json-response-format {:keywords? true})
+                  :response-format (ajax/transit-response-format)
                   :on-success      [:receive-mop]
                   :on-failure      [:handle-failure]}}))
 
