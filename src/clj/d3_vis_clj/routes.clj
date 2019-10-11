@@ -9,7 +9,8 @@
 (def mop
   (GET "/mop/" [id]
     (println id)
-    (generate-string (get-in db/example-mops [:mops (keyword id)]))))
+    (generate-string (select-keys (:mops db/example-mops)
+                                  [(keyword id)]))))
 
 (comment (mop {:server-port    80
                :server-name    "127.0.0.1"

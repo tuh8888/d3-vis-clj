@@ -46,7 +46,7 @@
   (fn [db [_ viz-id]]
     (get-in db [viz-id :type])))
 
-(reg-sub :cached-mops
+(reg-sub :cached-mop
   (fn [db [_ id]]
     (get-in db [:cached-data :mops id])))
 
@@ -64,7 +64,7 @@
     [(subscribe [:viz-type viz-id])
      (subscribe [::fses/node viz-id i])
      (subscribe [::dt-ses/row-value viz-id i])
-     (subscribe [:cached-mops i])])
+     (subscribe [:cached-mop i])])
   (fn [[type node row mop] [_ _ _]]
     (case type
       ::dt-db/table row
@@ -246,15 +246,16 @@
                   :params          {:id id}
                   :timeout         3000
                   :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [:receive-message]
+                  :on-success      [:receive-mop]
                   :on-failure      [:handle-failure]}}))
 
-(reg-event-db :receive-message
+(reg-event-db :receive-mop
   [trim-v]
   (fn [db [response]]
     (println "success" response)
-    (assoc db :response response
-              :sending false)))
+    (-> db
+        (update-in [:cached-data :mops] merge response)
+        (assoc :sending false))))
 
 (reg-event-db :handle-failure
   [trim-v]
@@ -262,10 +263,6 @@
     (println "failure" response)
     (assoc db :response :failure
               :sending false)))
-
-(reg-sub :response
-  (fn [db _]
-    (str (get db :response))))
 
 (reg-event-db :set-request
   [trim-v]
@@ -275,4 +272,8 @@
 (reg-sub :request
   (fn [db _]
     (str (get db :request))))
+
+(reg-sub :cached-data
+  (fn [db _]
+    (str (get db :cached-data))))
 

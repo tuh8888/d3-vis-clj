@@ -191,7 +191,7 @@
       {:type     "button"
        :on-click do-action}
       "Send message"]
-     [:label (<sub [:response])]]))
+     [:label (<sub [:cached-data])]]))
 
 (defn main-panel []
   (let [width "30%"]
