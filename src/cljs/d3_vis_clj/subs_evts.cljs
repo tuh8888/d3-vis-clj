@@ -253,22 +253,26 @@
   [trim-v]
   (fn [db [response]]
     (println "success" response)
-    (assoc db :message response
+    (assoc db :response response
               :sending false)))
 
 (reg-event-db :handle-failure
   [trim-v]
   (fn [db [response]]
     (println "failure" response)
-    (assoc db :message :failure
+    (assoc db :response :failure
               :sending false)))
 
-(reg-event-db :set-message
-  [trim-v]
-  (fn [db [message]]
-    (assoc db :message message)))
-
-(reg-sub :message
+(reg-sub :response
   (fn [db _]
-    (str (get db :message :not-delivered))))
+    (str (get db :response))))
+
+(reg-event-db :set-request
+  [trim-v]
+  (fn [db [id]]
+    (assoc db :request id)))
+
+(reg-sub :request
+  (fn [db _]
+    (str (get db :request))))
 

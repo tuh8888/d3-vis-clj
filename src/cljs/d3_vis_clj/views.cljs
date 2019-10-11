@@ -179,19 +179,19 @@
 (defn ajax-test-btn
   "Test if ajax sent and received"
   []
-  (let [do-action #(>evt [:request-mop (<sub [:message])])]
+  (let [do-action #(>evt [:request-mop (<sub [:request])])]
     [:div
      [:input
       {:type         "text"
-       :value        (<sub [:message])
-       :on-change    #(>evt [:set-message (util/target-value %)])
+       :value        (<sub [:request])
+       :on-change    #(>evt [:set-request (util/target-value %)])
        :on-key-press #(when (= (.-charCode %) 13)
                         (do-action))}]
      [:button
       {:type     "button"
        :on-click do-action}
       "Send message"]
-     [:label (<sub [:message])]]))
+     [:label (<sub [:response])]]))
 
 (defn main-panel []
   (let [width "30%"]
