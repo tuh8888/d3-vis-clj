@@ -48,7 +48,7 @@
               :value        (<sub [:node-to-add viz-id])
               :on-change    #(>evt [:set-node-to-add viz-id
                                     (util/target-value %)])
-              :on-key-press #(when (= (.-charCode %) 13)
+              :on-key-press #(when (util/key? % :enter)
                                (do-action))}]
      [:datalist {:id node-list-id}
       (for [mop nodes]
@@ -88,7 +88,7 @@
                   :height  0.4
                   :zoom-fn force-interaction/zoom
                   :drag-fn force-interaction/drag}
-      :node-opts {:ons      {:click #(if js/d3.event.ctrlKey
+      :node-opts {:ons      {:click #(if (util/key? js/d3.event :ctrl)
                                        (>evt [::fses/expand-node viz-id %2])
                                        (>evt [::fses/toggle-selected-node viz-id %2]))}
                   :style    {:fill   #(<sub [:mop-color viz-id %2])
@@ -185,8 +185,7 @@
       {:type         "text"
        :value        (<sub [:request])
        :on-change    #(>evt [:set-request (util/target-value %)])
-       :on-key-press #(when (= (.-charCode %) 13)
-                        (do-action))}]
+       :on-key-press #(when (util/key? % :enter) (do-action))}]
      [:button
       {:type     "button"
        :on-click do-action}

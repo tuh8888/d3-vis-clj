@@ -49,8 +49,8 @@
 (reg-event-fx :initialize-window-resize
   [trim-v]
   (fn [_ _]
-    (let [init-width  js/window.innerWidth
-          init-height js/window.innerHeight]
+    (let [init-width  (util/win-inner-w)
+          init-height (util/win-inner-h)]
       {:window/on-resize {:dispatch [:window-resize]}
        :dispatch         [:window-resize init-width init-height]})))
 

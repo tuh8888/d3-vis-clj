@@ -26,7 +26,8 @@
                  [org.clojars.stumitchell/clairvoyant "0.2.1"]
                  [day8/re-frame-tracer "0.1.1-SNAPSHOT"]
                  [day8.re-frame/http-fx "0.1.6"]
-                 [ring-transit "0.1.5"]]
+                 [ring-transit "0.1.5"]
+                 [cljsjs/mousetrap "1.6.3-0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-environ "1.1.0"]]

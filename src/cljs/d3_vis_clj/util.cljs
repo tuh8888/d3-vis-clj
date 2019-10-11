@@ -4,6 +4,20 @@
                                    get-coeffect assoc-coeffect
                                    get-effect assoc-effect]]))
 
+(defn win-inner-w
+  []
+  js/window.innerWidth)
+
+(defn win-inner-h
+  []
+  js/window.innerHeight)
+
+(def key-map {:enter 13
+              :ctrl  17})
+
+(defn key?
+  [e key]
+  (= (.-charCode e) (key key-map)))
 
 (defn get-label
   [d]
