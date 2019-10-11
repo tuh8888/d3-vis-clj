@@ -199,5 +199,5 @@
      [:h1 (<sub [:name])]
      [ajax-test-btn]
      [:div
-      #_[mop-table :panel1 width]
-      #_[force-viz :force-viz1 width]]]))
+      [mop-table :panel1 width]
+      [force-viz :force-viz1 width]]]))

@@ -65,6 +65,7 @@
     <orderEntry type="library" name="Leiningen: crypto-random:1.2.0" level="project" />
     <orderEntry type="library" name="Leiningen: day8.re-frame/http-fx:0.1.6" level="project" />
     <orderEntry type="library" name="Leiningen: day8/re-frame-tracer:0.1.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Leiningen: de.kotka/lazymap:3.1.0" level="project" />
     <orderEntry type="library" name="Leiningen: district0x/re-frame-window-fx:1.0.2" level="project" />
     <orderEntry type="library" name="Leiningen: doo:0.1.11" level="project" />
     <orderEntry type="library" name="Leiningen: environ:1.1.0" level="project" />
@@ -132,6 +133,7 @@
     <orderEntry type="library" name="Leiningen: org.msgpack/msgpack:0.6.12" level="project" />
     <orderEntry type="library" name="Leiningen: org.ow2.asm/asm-all:4.2" level="project" />
     <orderEntry type="library" name="Leiningen: org.tobereplaced/mapply:1.0.0" level="project" />
+    <orderEntry type="library" name="Leiningen: prismatic/plumbing:0.5.0" level="project" />
     <orderEntry type="library" name="Leiningen: prismatic/schema:1.1.3" level="project" />
     <orderEntry type="library" name="Leiningen: radicalzephyr/ring.middleware.logger:0.6.0" level="project" />
     <orderEntry type="library" name="Leiningen: re-frame:0.10.6" level="project" />
@@ -139,6 +141,7 @@
     <orderEntry type="library" name="Leiningen: reloaded.repl:0.2.4" level="project" />
     <orderEntry type="library" name="Leiningen: rid3:0.2.1" level="project" />
     <orderEntry type="library" name="Leiningen: ring-cors:0.1.12" level="project" />
+    <orderEntry type="library" name="Leiningen: ring-transit:0.1.5" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-anti-forgery:1.3.0" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-codec:1.1.0" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-core:1.7.1" level="project" />

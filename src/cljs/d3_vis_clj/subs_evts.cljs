@@ -11,9 +11,33 @@
             [data-table.subs-evts :as dt-ses]
             [d3-vis-clj.util :as util]))
 
-(reg-event-db :initialize-db
+(reg-event-fx :initialize-db
   (fn [_ _]
-    db/default-db))
+    {:db         db/default-db
+     :http-xhrio [{:method          :get
+                   :uri             "/hierarchy/"
+                   :timeout         3000
+                   :response-format (ajax/transit-response-format)
+                   :on-success      [:receive-hierarchy]
+                   :on-failure      [:handle-failure]}
+                  {:method          :get
+                   :uri             "/names/"
+                   :timeout         3000
+                   :response-format (ajax/transit-response-format)
+                   :on-success      [:receive-names]
+                   :on-failure      [:handle-failure]}]}))
+
+(reg-event-db :receive-hierarchy
+  [trim-v]
+  (fn [db [h]]
+    (println h)
+    (assoc-in db [:cached-data :hierarchy] h)))
+
+(reg-event-db :receive-names
+  [trim-v]
+  (fn [db [name-map]]
+    (println name-map)
+    (update-in db [:cached-data :mops] merge name-map)))
 
 (reg-event-db :window-resized
   [trim-v]
