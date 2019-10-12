@@ -83,7 +83,7 @@
   [trim-v]
   (fn [{:keys [db]} [viz-id new-node]]
     (when (and
-            (not (some #(= (:id %) (:id new-node)) (get-in db [viz-id :data :nodes])))
+            (not-any? #(= (:id %) (:id new-node)) (get-in db [viz-id :data :nodes]))
             new-node)
       (let [{{{:keys [nodes]} :data :as config} viz-id} db
             nodes (conj nodes new-node)]

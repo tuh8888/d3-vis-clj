@@ -26,9 +26,7 @@
         ty     (coord target :y)
         dx     (- tx sx)
         dy     (- ty sy)
-        dist   (Math/sqrt
-                 (+ (Math/pow dx 2)
-                    (Math/pow dy 2)))]
+        dist   (Math/hypot dx dy)]
     [(+ (/ dx dist)
         (/ (+ sx tx) 2))
      (+ (/ dy dist)

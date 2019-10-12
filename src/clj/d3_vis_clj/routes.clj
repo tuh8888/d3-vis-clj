@@ -38,7 +38,8 @@
           (assoc :headers {"Content-Type" "text/html; charset=utf-8"})))
     (-> "/mop/"
         (GET [id]
-          (-> (mop id)
+          (-> id
+              (mop)
               (response)))
         (t/wrap-transit-response))
     (-> "/hierarchy/"

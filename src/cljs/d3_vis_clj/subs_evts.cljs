@@ -55,12 +55,10 @@
        :dispatch         [:window-resize init-width init-height]})))
 
 (reg-sub :window-height
-  (fn [db]
-    (:height db)))
+  :height)
 
 (reg-sub :window-width
-  (fn [db]
-    (:width db)))
+  :width)
 
 (reg-event-db :toggle-selected-mop
   [trim-v (util/path-nth) (path [:data]) (util/path-nth) (path [:selected])]
@@ -218,8 +216,7 @@
       (:label link))))
 
 (reg-sub :name
-  (fn [db]
-    (:name db)))
+  :name)
 
 (reg-sub :hierarchy
   (fn [db]
@@ -239,7 +236,7 @@
           selected selected-color
           (isa? h id :A) "cyan"
           (isa? h id :B) "pink"
-          :default "white")))
+          :else "white")))
 
 (reg-sub :node-stroke
   (fn [[_ viz-id i]]

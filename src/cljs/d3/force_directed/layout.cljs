@@ -19,8 +19,7 @@
   [sim config & {:keys [reset?]}]
   (letfn [(link-force []
             (let [{:keys [distance strength]} (get-in config [:layout-config :link])]
-              (cond-> (-> (js/d3.forceLink)
-                          (.id d3-util/get-id))
+              (cond-> (.id (js/d3.forceLink) d3-util/get-id)
                       strength (.strength (fn [link] (.-strength link)))
                       distance (.distance distance))))
 
@@ -41,8 +40,7 @@
             (let [collide (get-in config [:layout-config :collide])
                   r       (get-in config [:node-config :r])]
               (when collide
-                (-> (js/d3.forceCollide)
-                    (.radius r)))))]
+                (.radius (js/d3.forceCollide) r))))]
     (let [links   (when reset? (util/get-links sim))
           force-m {:link    link-force
                    :collide collide-force
