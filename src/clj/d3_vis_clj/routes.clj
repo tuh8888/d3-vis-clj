@@ -6,28 +6,6 @@
             [ring.middleware.transit :as t]
             [d3-vis-clj.db :as db]))
 
-(defn mop
-  [id]
-  (println id)
-  (select-keys (:mops db/example-mops)
-               [(keyword id)]))
-(defn hierarchy
-  [_]
-  (:hierarchy db/example-mops))
-
-(defn names
-  [_]
-  (let [mops (:mops db/example-mops)]
-    (->> mops
-         (vals)
-         (map #(select-keys % [:name :id]))
-         (zipmap (keys mops)))))
-
-(defn mop [id]
-  (-> db/example-mops
-      :mops
-      (select-keys [(keyword id)])))
-
 (defn home-routes [_]
   (routes
     (GET "/" _
@@ -39,19 +17,19 @@
     (-> "/mop/"
         (GET [id]
           (-> id
-              (mop)
+              (keyword)
+              (vector)
+              (db/select-mops)
               (response)))
         (t/wrap-transit-response))
     (-> "/hierarchy/"
-        (GET request
-          (-> request
-              (hierarchy)
+        (GET _
+          (-> (db/get-hierarchy)
               (response)))
         (t/wrap-transit-response))
     (-> "/names/"
-        (GET request
-          (-> request
-              (names)
+        (GET _
+          (-> (db/get-names)
               (response)))
         (t/wrap-transit-response))
     (resources "/")))
